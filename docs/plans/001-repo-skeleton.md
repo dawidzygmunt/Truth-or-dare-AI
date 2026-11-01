@@ -1,6 +1,6 @@
 # 001: Szkielet repo (faza 1, krok 1)
 
-Status: zrealizowany (e2e na WebKit/Chromium czeka na biblioteki systemowe, patrz niżej)
+Status: zrealizowany
 
 ## Cel
 
@@ -90,4 +90,4 @@ tooling/eslint-boundaries/boundaries.test.ts  (+ fixtures)
 - `boundaries/dependencies` wymaga `checkAllOrigins: true`, inaczej nie sprawdza pakietów zewnętrznych ani wbudowanych modułów Node.
 - Pakiety eksportują `@tod/source` (źródła TS dla Vite/Vitest/typecheck) i `dist` (runtime api, e2e).
 - `CLAUDE.md` i `docs/` wyłączone z Prettiera, żeby nie przeformatowywał dokumentów.
-- E2E: test api przez proxy przechodzi; testy przeglądarkowe wymagają `playwright install-deps` (sudo) na tej maszynie.
+- E2E przechodzi na `iphone-webkit` i `pixel-chromium`; lokalnie wymaga jednorazowo `playwright install-deps` (sudo).
