@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { clientsClaim, type WorkboxPlugin } from 'workbox-core';
+import { clientsClaim } from 'workbox-core';
 import {
   cleanupOutdatedCaches,
   createHandlerBoundToURL,
@@ -10,24 +10,15 @@ import { StaleWhileRevalidate } from 'workbox-strategies';
 import {
   CATALOG_CACHE,
   CATALOG_PATH,
+  catalogCachePlugin,
+  deckCachePlugin,
   FREE_DECKS_CACHE,
   isDeckPath,
-  isFreeDeck,
   warmOfflineCaches,
 } from './offline-cache-policy.js';
 
 declare const self: ServiceWorkerGlobalScope & {
   readonly __WB_MANIFEST: Parameters<typeof precacheAndRoute>[0];
-};
-
-const onlySuccessful: WorkboxPlugin = {
-  cacheWillUpdate: ({ response }) => Promise.resolve(response.status === 200 ? response : null),
-};
-
-/** Paid decks pass through this route and are never stored, even with a valid entitlement. */
-const onlyFreeEditions: WorkboxPlugin = {
-  cacheWillUpdate: async ({ request, response }) =>
-    (await isFreeDeck(new URL(request.url).pathname, self.caches)) ? response : null,
 };
 
 void self.skipWaiting();
@@ -46,13 +37,16 @@ registerRoute(
 
 registerRoute(
   ({ sameOrigin, url }) => sameOrigin && url.pathname === CATALOG_PATH,
-  new StaleWhileRevalidate({ cacheName: CATALOG_CACHE, plugins: [onlySuccessful] }),
+  new StaleWhileRevalidate({
+    cacheName: CATALOG_CACHE,
+    plugins: [catalogCachePlugin(self.caches)],
+  }),
 );
 
 registerRoute(
   ({ sameOrigin, url }) => sameOrigin && isDeckPath(url.pathname),
   new StaleWhileRevalidate({
     cacheName: FREE_DECKS_CACHE,
-    plugins: [onlySuccessful, onlyFreeEditions],
+    plugins: [deckCachePlugin(self.caches)],
   }),
 );

@@ -1,4 +1,5 @@
-import { CatalogResponseSchema } from '@tod/contracts';
+import { CatalogResponseSchema, DeckResponseSchema } from '@tod/contracts';
+import type { z } from 'zod';
 
 export const CATALOG_PATH = '/api/catalog';
 export const CATALOG_CACHE = 'tod-catalog';
@@ -43,6 +44,51 @@ export async function isFreeDeck(pathname: string, caches: CacheOpener): Promise
   return freeDeckPaths(catalog).includes(pathname);
 }
 
+/** Whether a response may replace what is cached: only a 200 whose body honours the contract. */
+async function isValidResponse(response: Response, schema: z.ZodType): Promise<boolean> {
+  if (response.status !== 200) {
+    return false;
+  }
+  const body: unknown = await response
+    .clone()
+    .json()
+    .catch(() => null);
+  return schema.safeParse(body).success;
+}
+
+/** Workbox plugin for the catalog route. */
+export function catalogCachePlugin(_caches: CacheOpener) {
+  return {
+    cacheWillUpdate: async ({ response }: { readonly response: Response }) =>
+      (await isValidResponse(response, CatalogResponseSchema)) ? response : null,
+  };
+}
+
+/**
+ * Workbox plugin for the deck route, which paid decks pass through as well.
+ *
+ * Guarantee: a deck is stored only as a valid 200 for an edition that the catalog cached in this
+ * browser lists as free at the moment of writing. That catalog can be stale, so this is NOT "a paid
+ * deck is never stored": a 200 for an edition that became paid after the catalog was cached would
+ * be stored. Unreachable today, as the api answers 403 for every paid deck. It has to be solved
+ * before Entitlements, see ADR 0006.
+ */
+export function deckCachePlugin(caches: CacheOpener) {
+  return {
+    cacheWillUpdate: async ({
+      request,
+      response,
+    }: {
+      readonly request: Request;
+      readonly response: Response;
+    }) =>
+      (await isValidResponse(response, DeckResponseSchema)) &&
+      (await isFreeDeck(new URL(request.url).pathname, caches))
+        ? response
+        : null,
+  };
+}
+
 /**
  * Runs while the worker installs. The page that registered it is not controlled yet, so its own
  * requests never reach the caches, and "offline after the first load" would not hold otherwise.
@@ -71,7 +117,7 @@ export async function warmOfflineCaches(
     await Promise.all(
       freeDeckPaths(catalog).map(async (path) => {
         const deckResponse = await get(path);
-        if (deckResponse.status === 200) {
+        if (await isValidResponse(deckResponse, DeckResponseSchema)) {
           await deckCache.put(path, deckResponse);
         }
       }),

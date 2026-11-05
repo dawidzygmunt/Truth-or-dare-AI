@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   CATALOG_CACHE,
   CATALOG_PATH,
+  catalogCachePlugin,
+  deckCachePlugin,
   FREE_DECKS_CACHE,
   freeDeckPaths,
   isDeckPath,
@@ -113,6 +115,106 @@ describe('isFreeDeck', () => {
   });
 });
 
+describe('deckCachePlugin', () => {
+  const paidDeck = { editionSlug: PAID_EDITION_SLUG, cards: deckFixture.cards };
+  const requestFor = (path: string) => new Request(`http://localhost${path}`);
+
+  async function withCatalog(response: Response = json(catalogFixture)) {
+    const { opener } = fakeCaches();
+    const catalogCache = await opener.open(CATALOG_CACHE);
+    await catalogCache.put(CATALOG_PATH, response);
+    return deckCachePlugin(opener).cacheWillUpdate;
+  }
+
+  it('stores a 200 for a free edition and leaves its body readable', async () => {
+    const cacheWillUpdate = await withCatalog();
+
+    const stored = await cacheWillUpdate({
+      request: requestFor(FREE_DECK),
+      response: json(deckFixture),
+    });
+
+    expect(await stored?.json()).toEqual(deckFixture);
+  });
+
+  it('does not store a 200 for a paid edition', async () => {
+    const cacheWillUpdate = await withCatalog();
+
+    expect(
+      await cacheWillUpdate({ request: requestFor(PAID_DECK), response: json(paidDeck) }),
+    ).toBeNull();
+  });
+
+  it('does not store a 200 for an edition missing from the catalog', async () => {
+    const cacheWillUpdate = await withCatalog();
+    const path = '/api/editions/unknown/deck';
+
+    expect(
+      await cacheWillUpdate({ request: requestFor(path), response: json(deckFixture) }),
+    ).toBeNull();
+  });
+
+  it('writes nothing without a cached catalog', async () => {
+    const { cacheWillUpdate } = deckCachePlugin(fakeCaches().opener);
+
+    expect(
+      await cacheWillUpdate({ request: requestFor(FREE_DECK), response: json(deckFixture) }),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['is not JSON', new Response('<html>')],
+    ['breaks the contract', json({ games: 'nope' })],
+  ])('writes nothing when the cached catalog %s', async (_label, catalog) => {
+    const cacheWillUpdate = await withCatalog(catalog);
+
+    expect(
+      await cacheWillUpdate({ request: requestFor(FREE_DECK), response: json(deckFixture) }),
+    ).toBeNull();
+  });
+
+  it.each([401, 403, 404, 500])('does not store a %i', async (status) => {
+    const cacheWillUpdate = await withCatalog();
+
+    expect(
+      await cacheWillUpdate({
+        request: requestFor(FREE_DECK),
+        response: json(deckFixture, status),
+      }),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['breaks the contract', json({ cards: 'nope' })],
+    ['is not JSON', new Response('<html>')],
+  ])('does not overwrite good data with a 200 that %s', async (_label, response) => {
+    const cacheWillUpdate = await withCatalog();
+
+    expect(await cacheWillUpdate({ request: requestFor(FREE_DECK), response })).toBeNull();
+  });
+});
+
+describe('catalogCachePlugin', () => {
+  const { cacheWillUpdate } = catalogCachePlugin(fakeCaches().opener);
+
+  it('stores a valid catalog and leaves its body readable', async () => {
+    const stored = await cacheWillUpdate({ response: json(catalogFixture) });
+
+    expect(await stored?.json()).toEqual(catalogFixture);
+  });
+
+  it.each([403, 404, 500])('does not store a %i', async (status) => {
+    expect(await cacheWillUpdate({ response: json(catalogFixture, status) })).toBeNull();
+  });
+
+  it.each([
+    ['breaks the contract', json({ games: 'nope' })],
+    ['is not JSON', new Response('<html>')],
+  ])('does not overwrite good data with a 200 that %s', async (_label, response) => {
+    expect(await cacheWillUpdate({ response })).toBeNull();
+  });
+});
+
 describe('warmOfflineCaches', () => {
   it('stores the catalog and the decks of free editions', async () => {
     const { opener, keys } = fakeCaches();
@@ -143,6 +245,18 @@ describe('warmOfflineCaches', () => {
     const network = fakeNetwork({
       [CATALOG_PATH]: json(catalogFixture),
       [FREE_DECK]: json({}, 403),
+    });
+
+    await warmOfflineCaches(opener, network);
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([]);
+  });
+
+  it('does not store a 200 deck that breaks the contract', async () => {
+    const { opener, keys } = fakeCaches();
+    const network = fakeNetwork({
+      [CATALOG_PATH]: json(catalogFixture),
+      [FREE_DECK]: json({ cards: 'nope' }),
     });
 
     await warmOfflineCaches(opener, network);
