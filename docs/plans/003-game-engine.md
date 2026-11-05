@@ -1,6 +1,6 @@
 # 003: `packages/game-engine` z prawdą czy wyzwanie (faza 1, krok 3)
 
-Status: w realizacji
+Status: zrealizowany
 
 ## Cel
 
@@ -146,3 +146,10 @@ packages/game-engine/src/
 - **`noUncheckedIndexedAccess` a zakaz `!`**: `strictTypeChecked` zabrania non-null assertion. Kod ma używać `splice`/destrukturyzacji i helpera `pickOne`, nie `!`.
 - **Stan z IndexedDB ze starszej wersji silnika** może mieć inny kształt. Wersjonowanie stanu to temat kroku 5 (`ENGINE_VERSION` może być kluczem).
 - **Reshuffle a powtórka na styku cykli**: ostatnia karta cyklu może wyjść pierwsza w następnym. Akceptowane, zob. „Poza zakresem”.
+
+## Odstępstwa od planu (po implementacji)
+
+- `neighboursOf` przyjmuje `players`, nie całą kolejkę: `template.ts` potrzebuje tylko listy.
+- Reduktor rozdziela akcje według `phase` w jednym miejscu, a funkcje przejść dostają już zawężony typ stanu. Dzięki temu nie ma w nich strażników fazy, a `ActionNotAllowedError` powstaje tylko w jednym miejscu.
+- `core/random.ts` używa `const [value = 0] = crypto.getRandomValues(buffer)`, bo `as number` łamie `non-nullable-type-assertion-style`, a `!` łamie `no-non-null-assertion`. Domyślne `0` jest nieosiągalne.
+- Testy serializacji (5.7) przeszły od razu, bo zaprojektowany kształt stanu już je spełniał, więc nie było fazy red. Zdolność wykrywania błędów sprawdzona mutacją: `Random` w stanie, brak zapisu pozycji talii i brak normalizacji `penaltyShots` dają czerwone testy serializacji. Mutacja cofnięta.
