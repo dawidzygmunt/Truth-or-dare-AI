@@ -38,21 +38,21 @@ interface SharedState {
   readonly deck: Deck;
 }
 
-interface AwaitingTurnState extends SharedState {
+export interface AwaitingTurnState extends SharedState {
   readonly phase: 'awaitingTurn';
   readonly currentPlayer: string | null;
   readonly currentCard: null;
   readonly penalty: Penalty | null;
 }
 
-interface ChoosingState extends SharedState {
+export interface ChoosingState extends SharedState {
   readonly phase: 'choosing';
   readonly currentPlayer: string;
   readonly currentCard: null;
   readonly penalty: null;
 }
 
-interface CardDrawnState extends SharedState {
+export interface CardDrawnState extends SharedState {
   readonly phase: 'cardDrawn';
   readonly currentPlayer: string;
   readonly currentCard: ResolvedCard;

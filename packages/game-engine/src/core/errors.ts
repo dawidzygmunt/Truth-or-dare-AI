@@ -36,3 +36,15 @@ export class MissingCardKindError extends GameError {
     super(`The deck has no cards of kind "${kind}"`);
   }
 }
+
+/** The action is not one of the moves available in the current phase of the game. */
+export class ActionNotAllowedError extends GameError {
+  readonly code = 'action_not_allowed';
+
+  constructor(
+    readonly action: string,
+    readonly phase: string,
+  ) {
+    super(`Action "${action}" is not allowed in phase "${phase}"`);
+  }
+}

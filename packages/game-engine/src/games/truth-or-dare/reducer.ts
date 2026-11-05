@@ -1,10 +1,16 @@
 import { drawCard } from '../../core/deck.js';
-import { MissingCardKindError } from '../../core/errors.js';
+import { ActionNotAllowedError, MissingCardKindError } from '../../core/errors.js';
 import { takeTurn } from '../../core/player-queue.js';
 import type { Random } from '../../core/random.js';
 import { err, ok, type Result } from '../../core/result.js';
 import { resolveTemplate } from '../../core/template.js';
-import type { TruthOrDareKind, TruthOrDareState } from './state.js';
+import type {
+  AwaitingTurnState,
+  CardDrawnState,
+  ChoosingState,
+  TruthOrDareKind,
+  TruthOrDareState,
+} from './state.js';
 
 const DEFAULT_SHOTS = 1;
 
@@ -15,8 +21,9 @@ export type TruthOrDareAction =
   | { readonly type: 'complete' }
   | { readonly type: 'fail' };
 
-export type TruthOrDareActionError = MissingCardKindError;
+export type TruthOrDareActionError = ActionNotAllowedError | MissingCardKindError;
 
+/** On failure there is no new state, so the caller keeps the state it passed in. */
 export type TruthOrDareResult = Result<TruthOrDareState, TruthOrDareActionError>;
 
 export type TruthOrDareReducer = (
@@ -24,10 +31,7 @@ export type TruthOrDareReducer = (
   action: TruthOrDareAction,
 ) => TruthOrDareResult;
 
-function nextTurn(state: TruthOrDareState): TruthOrDareResult {
-  if (state.phase !== 'awaitingTurn') {
-    return ok(state);
-  }
+function nextTurn(state: AwaitingTurnState): TruthOrDareResult {
   const { player, queue } = takeTurn(state.queue);
   return ok({
     ...state,
@@ -39,14 +43,7 @@ function nextTurn(state: TruthOrDareState): TruthOrDareResult {
   });
 }
 
-function choose(
-  state: TruthOrDareState,
-  kind: TruthOrDareKind,
-  random: Random,
-): TruthOrDareResult {
-  if (state.phase !== 'choosing') {
-    return ok(state);
-  }
+function choose(state: ChoosingState, kind: TruthOrDareKind, random: Random): TruthOrDareResult {
   const drawn = drawCard(state.deck, kind, random);
   if (drawn === null) {
     return err(new MissingCardKindError(kind));
@@ -61,17 +58,11 @@ function choose(
   });
 }
 
-function complete(state: TruthOrDareState): TruthOrDareResult {
-  if (state.phase !== 'cardDrawn') {
-    return ok(state);
-  }
+function complete(state: CardDrawnState): TruthOrDareResult {
   return ok({ ...state, phase: 'awaitingTurn', currentCard: null });
 }
 
-function fail(state: TruthOrDareState): TruthOrDareResult {
-  if (state.phase !== 'cardDrawn') {
-    return ok(state);
-  }
+function fail(state: CardDrawnState): TruthOrDareResult {
   const penalty =
     state.penaltyMode === 'shots'
       ? { player: state.currentPlayer, shots: state.currentCard.penaltyShots ?? DEFAULT_SHOTS }
@@ -82,17 +73,19 @@ function fail(state: TruthOrDareState): TruthOrDareResult {
 /** Creates the reducer. `Random` is bound here because game state must stay JSON-serializable. */
 export function createTruthOrDareReducer(random: Random): TruthOrDareReducer {
   return (state, action) => {
-    switch (action.type) {
-      case 'nextTurn':
-        return nextTurn(state);
-      case 'chooseTruth':
-        return choose(state, 'truth', random);
-      case 'chooseDare':
-        return choose(state, 'dare', random);
-      case 'complete':
-        return complete(state);
-      case 'fail':
-        return fail(state);
+    switch (state.phase) {
+      case 'awaitingTurn':
+        if (action.type === 'nextTurn') return nextTurn(state);
+        break;
+      case 'choosing':
+        if (action.type === 'chooseTruth') return choose(state, 'truth', random);
+        if (action.type === 'chooseDare') return choose(state, 'dare', random);
+        break;
+      case 'cardDrawn':
+        if (action.type === 'complete') return complete(state);
+        if (action.type === 'fail') return fail(state);
+        break;
     }
+    return err(new ActionNotAllowedError(action.type, state.phase));
   };
 }
