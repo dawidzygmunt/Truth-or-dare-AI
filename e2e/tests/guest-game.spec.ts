@@ -71,6 +71,7 @@ test.describe('guest game', () => {
     await startGame(page);
 
     await page.getByTestId('end-game').click();
+    await page.getByTestId('end-game-confirm').click();
 
     await expect(page.getByTestId(`edition-${EDITION_SLUG}`)).toBeVisible();
     await expect(page.getByTestId('resume-game')).toBeHidden();

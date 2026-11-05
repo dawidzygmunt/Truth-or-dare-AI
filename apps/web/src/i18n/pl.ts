@@ -34,6 +34,12 @@ export const pl = {
     penaltyNone: 'Bez kar',
     penaltyShots: 'Shoty',
     start: 'Zacznij grę',
+    replaceConfirm: {
+      title: 'Zacząć nową grę?',
+      description: 'Trwająca gra zostanie zakończona.',
+      confirm: 'Tak, zacznij nową',
+      cancel: 'Nie zaczynaj',
+    },
     removeSymbol: '×',
   },
   game: {
@@ -44,6 +50,12 @@ export const pl = {
     notDone: 'Nie wykonane',
     next: 'Dalej',
     end: 'Zakończ grę',
+    endConfirm: {
+      title: 'Zakończyć grę?',
+      description: 'Tej gry nie będzie można już kontynuować.',
+      confirm: 'Tak, zakończ',
+      cancel: 'Wróć do gry',
+    },
     penalty: (player: string, shots: number) =>
       `${player}: ${shots} ${plural(shots, { one: 'shot', few: 'shoty', many: 'shotów' })}`,
   },

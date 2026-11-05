@@ -5,9 +5,11 @@ import {
   selectPenalty,
   selectPhase,
 } from '@tod/game-engine';
+import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { pl } from '../../i18n/pl.js';
-import { Button } from '../../shared/ui/button.js';
+import { Button, textActionClasses } from '../../shared/ui/button.js';
+import { ConfirmPanel } from '../../shared/ui/confirm-panel.js';
 import { LoadingMessage } from '../../shared/ui/loading-message.js';
 import { Screen } from '../../shared/ui/screen.js';
 import { useGameStore } from './game-store-context.js';
@@ -97,6 +99,7 @@ export function GameScreen() {
   const hydrated = useGameStore((state) => state.hydrated);
   const reset = useGameStore((state) => state.reset);
   const navigate = useNavigate();
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
 
   if (game === null) {
     return hydrated ? (
@@ -109,23 +112,50 @@ export function GameScreen() {
   }
 
   return (
-    <Screen title={selectCurrentPlayer(game) ?? pl.game.title} titleTestId="current-player">
+    <Screen
+      title={selectCurrentPlayer(game) ?? pl.game.title}
+      titleTestId="current-player"
+      action={
+        !confirmingEnd && (
+          <button
+            type="button"
+            data-testid="end-game"
+            className={`${textActionClasses} shrink-0 text-neutral-400`}
+            onClick={() => {
+              setConfirmingEnd(true);
+            }}
+          >
+            {pl.game.end}
+          </button>
+        )
+      }
+    >
       {error !== null && (
         <p role="alert" data-testid="game-error" className="text-red-400">
           {pl.gameErrors[error]}
         </p>
       )}
-      <TurnControls game={game} />
-      <Button
-        data-testid="end-game"
-        variant="secondary"
-        onClick={() => {
-          reset();
-          void navigate('/');
-        }}
-      >
-        {pl.game.end}
-      </Button>
+      {confirmingEnd ? (
+        <ConfirmPanel
+          title={pl.game.endConfirm.title}
+          description={pl.game.endConfirm.description}
+          confirmLabel={pl.game.endConfirm.confirm}
+          cancelLabel={pl.game.endConfirm.cancel}
+          confirmTestId="end-game-confirm"
+          cancelTestId="end-game-cancel"
+          onConfirm={() => {
+            reset();
+            void navigate('/');
+          }}
+          onCancel={() => {
+            setConfirmingEnd(false);
+          }}
+        />
+      ) : (
+        <div data-testid="turn-actions" className="flex flex-col gap-6">
+          <TurnControls game={game} />
+        </div>
+      )}
     </Screen>
   );
 }

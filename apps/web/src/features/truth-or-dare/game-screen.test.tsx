@@ -124,9 +124,49 @@ describe('GameScreen', () => {
     const store = renderGame();
     await screen.findByTestId('current-player');
 
-    await click(pl.game.end);
+    await userEvent.click(screen.getByTestId('end-game'));
+    await userEvent.click(screen.getByTestId('end-game-confirm'));
 
     expect(store.getState().game).toBeNull();
     expect(await screen.findByRole('heading', { level: 1, name: pl.catalog.title })).toBeVisible();
+  });
+
+  it('keeps the game until ending it is confirmed', async () => {
+    const store = renderGame();
+    await screen.findByTestId('current-player');
+
+    await userEvent.click(screen.getByTestId('end-game'));
+
+    expect(store.getState().game).not.toBeNull();
+    expect(screen.getByRole('alertdialog', { name: pl.game.endConfirm.title })).toBeVisible();
+    expect(screen.getByTestId('end-game-cancel')).toHaveFocus();
+  });
+
+  it('returns to the turn when ending the game is cancelled', async () => {
+    const store = renderGame();
+    await screen.findByTestId('current-player');
+    await click(pl.game.dare);
+    const game = store.getState().game;
+
+    await userEvent.click(screen.getByTestId('end-game'));
+    await userEvent.click(screen.getByTestId('end-game-cancel'));
+
+    expect(store.getState().game).toBe(game);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('mark-done')).toBeVisible();
+  });
+
+  it('keeps the end-game action out of the primary action area', async () => {
+    renderGame();
+    await screen.findByTestId('current-player');
+    await click(pl.game.dare);
+
+    const actions = screen.getByTestId('turn-actions');
+    const endGame = screen.getByTestId('end-game');
+
+    expect(actions).not.toContainElement(endGame);
+    expect(
+      endGame.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
