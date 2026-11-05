@@ -8,6 +8,11 @@ import {
 } from '../../core/errors.js';
 import { createSeededRandom } from '../../core/random.js';
 import {
+  createTruthOrDareReducer,
+  type TruthOrDareAction,
+  type TruthOrDareReducer,
+} from './reducer.js';
+import {
   selectCurrentCard,
   selectCurrentPlayer,
   selectPenalty,
@@ -46,6 +51,24 @@ function setupError(config: Partial<TruthOrDareConfig>): Error {
   return result.error;
 }
 
+function reducer(seed = 2): TruthOrDareReducer {
+  return createTruthOrDareReducer(createSeededRandom(seed));
+}
+
+function play(
+  reduce: TruthOrDareReducer,
+  start: TruthOrDareState,
+  ...actions: TruthOrDareAction['type'][]
+): TruthOrDareState {
+  return actions.reduce((state, type) => {
+    const result = reduce(state, { type });
+    if (!result.ok) {
+      throw result.error;
+    }
+    return result.value;
+  }, start);
+}
+
 describe('setupTruthOrDare', () => {
   it('starts waiting for the first turn', () => {
     const state = setup();
@@ -81,5 +104,112 @@ describe('setupTruthOrDare', () => {
 
     expect(error).toBeInstanceOf(MissingCardKindError);
     expect(error).toMatchObject({ kind: 'dare' });
+  });
+});
+
+describe('truth or dare flow', () => {
+  it('nextTurn starts the turn of the first player', () => {
+    const state = play(reducer(), setup(), 'nextTurn');
+
+    expect(selectPhase(state)).toBe('choosing');
+    expect(selectCurrentPlayer(state)).toBe('Ola');
+    expect(selectCurrentCard(state)).toBeNull();
+  });
+
+  it('chooseTruth draws a truth with a resolved template', () => {
+    const state = play(reducer(), setup(), 'nextTurn', 'chooseTruth');
+
+    expect(selectPhase(state)).toBe('cardDrawn');
+    expect(selectCurrentCard(state)).toMatchObject({ kind: 'truth' });
+    expect(selectCurrentCard(state)?.text).toMatch(/^Ola: prawda \d$/);
+  });
+
+  it('chooseDare draws a dare with a resolved template', () => {
+    const state = play(reducer(), setup(), 'nextTurn', 'chooseDare');
+
+    expect(selectPhase(state)).toBe('cardDrawn');
+    expect(selectCurrentCard(state)).toMatchObject({ kind: 'dare' });
+    expect(selectCurrentCard(state)?.text).toMatch(/^Ola: wyzwanie \d$/);
+  });
+
+  it('complete ends the turn without a penalty', () => {
+    const state = play(reducer(), setup(), 'nextTurn', 'chooseTruth', 'complete');
+
+    expect(selectPhase(state)).toBe('awaitingTurn');
+    expect(selectCurrentCard(state)).toBeNull();
+    expect(selectPenalty(state)).toBeNull();
+  });
+
+  it('rotates players in the order added and wraps after the last one', () => {
+    const reduce = reducer();
+    let state = setup();
+    const players: (string | null)[] = [];
+
+    for (let turn = 0; turn < 7; turn++) {
+      state = play(reduce, state, 'nextTurn');
+      players.push(selectCurrentPlayer(state));
+      state = play(reduce, state, 'chooseDare', 'complete');
+    }
+
+    expect(players).toEqual(['Ola', 'Kuba', 'Ania', 'Ola', 'Kuba', 'Ania', 'Ola']);
+  });
+
+  it('draws all cards of a kind before repeating one', () => {
+    const reduce = reducer();
+    let state = setup();
+    const ids: (string | undefined)[] = [];
+
+    for (let turn = 0; turn < 2; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth');
+      ids.push(selectCurrentCard(state)?.id);
+      state = play(reduce, state, 'complete');
+    }
+
+    expect([...ids].sort()).toEqual(['t1', 't2']);
+  });
+
+  it('keeps going after a kind is exhausted', () => {
+    const reduce = reducer();
+    let state = setup();
+
+    for (let turn = 0; turn < 9; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth', 'complete');
+    }
+
+    expect(selectPhase(state)).toBe('awaitingTurn');
+  });
+
+  it('ignores cards of kinds that do not belong to this game', () => {
+    const reduce = reducer();
+    let state = setup({
+      cards: [
+        ...CARDS,
+        { id: 's1', kind: 'statement', template: 'stwierdzenie' },
+        { id: 'c1', kind: 'challenge', template: 'wyzwanie beer pong' },
+      ],
+    });
+
+    for (let turn = 0; turn < 8; turn++) {
+      state = play(reduce, state, 'nextTurn', turn % 2 === 0 ? 'chooseTruth' : 'chooseDare');
+      expect(['t1', 't2', 'd1', 'd2']).toContain(selectCurrentCard(state)?.id);
+      state = play(reduce, state, 'complete');
+    }
+  });
+
+  it('resolves player placeholders against the game players', () => {
+    const state = play(
+      reducer(),
+      setup({
+        players: ['Ola', 'Kuba'],
+        cards: [
+          { id: 't', kind: 'truth', template: '{player}>{randomPlayer}>{playerLeft}>{playerRight}' },
+          { id: 'd', kind: 'dare', template: 'dare' },
+        ],
+      }),
+      'nextTurn',
+      'chooseTruth',
+    );
+
+    expect(selectCurrentCard(state)?.text).toBe('Ola>Kuba>Kuba>Kuba');
   });
 });
