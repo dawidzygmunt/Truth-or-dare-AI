@@ -65,12 +65,18 @@ export function createDeck(cards: readonly Card[], random: Random): Deck {
   };
 }
 
-/** Draws the next card of a kind, or returns `null` when none is left. */
-export function drawCard(deck: Deck, kind: CardKind, _random: Random): DrawnCard | null {
+/**
+ * Draws the next card of a kind, reshuffling only that kind once it is exhausted.
+ * Returns `null` when the deck never had a card of that kind.
+ */
+export function drawCard(deck: Deck, kind: CardKind, random: Random): DrawnCard | null {
   const pile = deck[kind];
-  const card = pile.cards[pile.nextIndex];
+  const isExhausted = pile.nextIndex >= pile.cards.length;
+  const cards = isExhausted ? shuffle(pile.cards, random) : pile.cards;
+  const nextIndex = isExhausted ? 0 : pile.nextIndex;
+  const card = cards[nextIndex];
   if (card === undefined) {
     return null;
   }
-  return { card, deck: { ...deck, [kind]: { ...pile, nextIndex: pile.nextIndex + 1 } } };
+  return { card, deck: { ...deck, [kind]: { cards, nextIndex: nextIndex + 1 } } };
 }
