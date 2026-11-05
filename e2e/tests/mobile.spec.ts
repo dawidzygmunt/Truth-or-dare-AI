@@ -48,6 +48,17 @@ test.describe('mobile', () => {
     await expect(page.getByTestId('card')).toBeFocused();
   });
 
+  test('the home watermark floats, unless reduced motion is requested', async ({ page }) => {
+    const animation = () =>
+      page.getByTestId('featured-mark').evaluate((mark) => getComputedStyle(mark).animationName);
+
+    await openAsGuest(page);
+    expect(await animation()).toBe('scfloat');
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await animation()).toBe('none');
+  });
+
   test('the safe area padding reaches the built stylesheet', async ({ page }) => {
     await openAsGuest(page);
 

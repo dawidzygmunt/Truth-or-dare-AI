@@ -68,6 +68,24 @@ test.describe('double tap', () => {
     }
   });
 
+  test('on a card outcome never picks the next card', async ({ page }) => {
+    await openAsGuest(page);
+    await startGame(page);
+
+    for (let turn = 0; turn < TURNS; turn += 1) {
+      const truth = await boxOf(page.getByTestId('choose-truth'));
+      const dare = await boxOf(page.getByTestId('choose-dare'));
+      await drawCard(page, 'dare');
+      const done = await boxOf(page.getByTestId('mark-done'));
+      const notDone = await boxOf(page.getByTestId('mark-not-done'));
+      await page.getByTestId('mark-done').click();
+      await expect(page.getByTestId('choose-truth')).toBeVisible();
+
+      expect(overlaps(done, truth) || overlaps(done, dare)).toBe(false);
+      expect(overlaps(notDone, truth) || overlaps(notDone, dare)).toBe(false);
+    }
+  });
+
   test('on "end game" only asks for confirmation', async ({ page }) => {
     await openAsGuest(page);
     await startGame(page);
