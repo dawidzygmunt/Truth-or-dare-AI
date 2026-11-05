@@ -4,7 +4,8 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { pl } from '../../i18n/pl.js';
 import { useDeckQuery } from '../../shared/api/queries.js';
 import { ApiErrorMessage } from '../../shared/ui/api-error-message.js';
-import { Button } from '../../shared/ui/button.js';
+import { Button, textActionClasses } from '../../shared/ui/button.js';
+import { ConfirmPanel } from '../../shared/ui/confirm-panel.js';
 import { LoadingMessage } from '../../shared/ui/loading-message.js';
 import { Screen } from '../../shared/ui/screen.js';
 import { useGameStore } from '../truth-or-dare/game-store-context.js';
@@ -19,12 +20,14 @@ export function SetupScreen() {
   const { editionSlug = '' } = useParams();
   const deck = useDeckQuery(editionSlug);
   const start = useGameStore((state) => state.start);
+  const hasGame = useGameStore((state) => state.game !== null);
   const navigate = useNavigate();
 
   const [players, setPlayers] = useState<readonly string[]>([]);
   const [draft, setDraft] = useState('');
   const [penaltyMode, setPenaltyMode] = useState<PenaltyMode>('none');
   const [setupError, setSetupError] = useState<GameSetupErrorCode | null>(null);
+  const [confirmingReplace, setConfirmingReplace] = useState(false);
 
   const addPlayer = (event: SyntheticEvent) => {
     event.preventDefault();
@@ -42,6 +45,7 @@ export function SetupScreen() {
   };
 
   const startGame = () => {
+    setConfirmingReplace(false);
     if (deck.data === undefined) {
       return;
     }
@@ -135,10 +139,35 @@ export function SetupScreen() {
         />
       )}
 
-      <Button data-testid="start-game" disabled={deck.data === undefined} onClick={startGame}>
-        {pl.setup.start}
-      </Button>
-      <Link data-testid="back-link" className="text-center underline" to="/">
+      {confirmingReplace ? (
+        <ConfirmPanel
+          title={pl.setup.replaceConfirm.title}
+          description={pl.setup.replaceConfirm.description}
+          confirmLabel={pl.setup.replaceConfirm.confirm}
+          cancelLabel={pl.setup.replaceConfirm.cancel}
+          confirmTestId="replace-game-confirm"
+          cancelTestId="replace-game-cancel"
+          onConfirm={startGame}
+          onCancel={() => {
+            setConfirmingReplace(false);
+          }}
+        />
+      ) : (
+        <Button
+          data-testid="start-game"
+          disabled={deck.data === undefined}
+          onClick={() => {
+            if (hasGame) {
+              setConfirmingReplace(true);
+            } else {
+              startGame();
+            }
+          }}
+        >
+          {pl.setup.start}
+        </Button>
+      )}
+      <Link data-testid="back-link" className={textActionClasses} to="/">
         {pl.common.back}
       </Link>
     </Screen>

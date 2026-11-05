@@ -2,8 +2,13 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { pl } from '../../i18n/pl.js';
-import { deckFixture, FREE_EDITION_SLUG, PAID_EDITION_SLUG } from '../../test/fixtures.js';
-import { renderApp, stubApi } from '../../test/render-app.js';
+import {
+  cardsFixture,
+  deckFixture,
+  FREE_EDITION_SLUG,
+  PAID_EDITION_SLUG,
+} from '../../test/fixtures.js';
+import { createTestStore, renderApp, stubApi } from '../../test/render-app.js';
 
 const DECK = `/api/editions/${FREE_EDITION_SLUG}/deck`;
 const ROUTE = `/setup/${FREE_EDITION_SLUG}`;
@@ -112,6 +117,77 @@ describe('SetupScreen', () => {
     await startGame();
 
     expect(store.getState().game?.penaltyMode).toBe('shots');
+    expect(await screen.findByTestId('current-player')).toHaveTextContent('Ola');
+  });
+
+  describe('with a game in progress', () => {
+    const renderWithGame = async () => {
+      stubApi({ [DECK]: { body: deckFixture } });
+      const store = createTestStore();
+      store
+        .getState()
+        .start({ players: ['Ola', 'Kuba'], cards: cardsFixture, penaltyMode: 'none' });
+      renderApp({ route: ROUTE, store });
+      await addPlayer('Zosia');
+      await addPlayer('Janek');
+      await startGame();
+      return store;
+    };
+
+    it('asks before replacing it', async () => {
+      const store = await renderWithGame();
+
+      expect(store.getState().game?.currentPlayer).toBe('Ola');
+      expect(
+        screen.getByRole('alertdialog', { name: pl.setup.replaceConfirm.title }),
+      ).toBeVisible();
+      expect(screen.getByTestId('replace-game-cancel')).toHaveFocus();
+    });
+
+    it('replaces it after confirming', async () => {
+      const store = await renderWithGame();
+
+      await userEvent.click(screen.getByTestId('replace-game-confirm'));
+
+      expect(store.getState().game?.currentPlayer).toBe('Zosia');
+      expect(await screen.findByTestId('current-player')).toHaveTextContent('Zosia');
+    });
+
+    it('keeps it and stays in setup after cancelling', async () => {
+      const store = await renderWithGame();
+
+      await userEvent.click(screen.getByTestId('replace-game-cancel'));
+
+      expect(store.getState().game?.currentPlayer).toBe('Ola');
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getAllByTestId('player-item')).toHaveLength(2);
+    });
+
+    it('keeps it when the engine refuses the new setup', async () => {
+      stubApi({ [DECK]: { body: deckFixture } });
+      const store = createTestStore();
+      store
+        .getState()
+        .start({ players: ['Ola', 'Kuba'], cards: cardsFixture, penaltyMode: 'none' });
+      renderApp({ route: ROUTE, store });
+      await addPlayer('Zosia');
+      await startGame();
+
+      await userEvent.click(screen.getByTestId('replace-game-confirm'));
+
+      expect(screen.getByRole('alert')).toHaveTextContent(pl.gameErrors.too_few_players);
+      expect(store.getState().game?.currentPlayer).toBe('Ola');
+    });
+  });
+
+  it('does not ask when there is no game to replace', async () => {
+    stubApi({ [DECK]: { body: deckFixture } });
+    renderApp({ route: ROUTE });
+    await addPlayer('Ola');
+    await addPlayer('Kuba');
+
+    await startGame();
+
     expect(await screen.findByTestId('current-player')).toHaveTextContent('Ola');
   });
 
