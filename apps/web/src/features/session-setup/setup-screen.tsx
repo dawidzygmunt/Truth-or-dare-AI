@@ -94,7 +94,7 @@ export function SetupScreen() {
                   removePlayer(index);
                 }}
               >
-                ×
+                {pl.setup.removeSymbol}
               </button>
             </li>
           ))}

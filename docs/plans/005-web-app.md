@@ -1,6 +1,6 @@
 # 005: `apps/web`, prawda czy wyzwanie od początku do końca (faza 1, krok 5)
 
-Status: w toku
+Status: zrealizowany
 
 Zadania z roadmapy: T5.1–T5.5 (`docs/roadmap.md`). ADR-y powiązane: 0001, 0004, 0005, nowy 0006 (cache service workera).
 
@@ -68,7 +68,7 @@ Gość przechodzi w telefonie cały przepływ: age gate → wybór edycji z api 
 
 ```
 apps/web/package.json, tsconfig.json, vite.config.ts, index.html                     (zmiana)
-apps/web/vitest.config.ts, apps/web/src/test/{setup.ts,render-app.tsx,fixtures.ts}   (nowe)
+apps/web/vitest.config.ts, apps/web/src/test/{setup.ts,render-app.tsx,fixtures.ts,memory-storage.ts}   (nowe)
 apps/web/public/{icon-192.png,icon-512.png,icon-maskable-512.png,apple-touch-icon.png}  (nowe)
 apps/web/src/main.tsx                                      (zmiana)
 apps/web/src/i18n/{pl.ts,plural.ts}                        (zmiana, nowy)
@@ -79,7 +79,7 @@ apps/web/src/features/truth-or-dare/{game-store.ts,game-store-context.tsx,game-s
 apps/web/src/features/install/install-screen.tsx           (nowy)
 apps/web/src/shared/api/{api-error.ts,api-client.ts,queries.ts,query-client.ts}      (nowe)
 apps/web/src/shared/storage/{key-value-storage.ts,age-gate-storage.ts}               (nowe)
-apps/web/src/shared/ui/{screen.tsx,button.tsx}             (nowe)
+apps/web/src/shared/ui/{screen.tsx,button.tsx,api-error-message.tsx,loading-message.tsx}  (nowe)
 apps/web/src/sw/{sw.ts,offline-cache-policy.ts}            (nowe)
 docker-compose.yml, .env.example, e2e/playwright.config.ts (zmiana)
 docs/adr/0006-service-worker-offline-cache.md              (nowy)
@@ -129,4 +129,12 @@ Zmiana przepływu użytkownika: test Playwright to krok 6. Tu weryfikacja jednor
 - **WebKit w Playwright a service worker i `setOffline`**: zachowanie na Linuksie może różnić się od Safari. Sprawdzić skryptem i opisać wynik dla kroku 6.
 - **Limit czasu `webServer`**: pobranie obrazu Postgresa i buildy mogą przekroczyć domyślne 60 s, więc limit zostaje podniesiony.
 - **`reuseExistingServer` lokalnie**: serwer zostawiony na porcie 3100 pomija start bazy. Zachowanie Playwrighta, bez obejścia.
-- **Lista graczy a stan silnika**: nazwy są czyszczone dopiero w `setupTruthOrDare`. Pole z samą spacją daje błąd przy starcie, nie przy dodawaniu.
+
+## Odstępstwa od planu (po implementacji)
+
+- Puste imię: przycisk „Dodaj gracza” jest wyłączony, gdy pole po przycięciu jest puste. To obsługa formularza, reguły graczy nadal egzekwuje silnik. `empty_player_name` ma tłumaczenie, ale z tego ekranu nie jest osiągalny.
+- Bez `workbox-cacheable-response`: `CacheableResponsePlugin` nie kompiluje się z `exactOptionalPropertyTypes` (typ `WorkboxPlugin`), a warunek to jedna linia, więc jest zwykłym pluginem w `sw.ts`.
+- SW budowany jako `iife` (`rollupFormat`), bo `registerSW.js` rejestruje klasyczny skrypt.
+- CI bez zmian: `pnpm test:e2e` sam uruchamia bazę, a `ubuntu-latest` ma Dockera z compose. Nie sprawdzone na GitHub Actions, tylko lokalnie.
+- Smoke test Playwrighta bez zmian: age gate ma `main` i `h1`.
+- Weryfikacja jednorazowym skryptem (usuniętym) na `iphone-webkit` i `pixel-chromium`: pełny przepływ, 5 tur, odświeżenie z kartą i z karą, tryb `none`, offline zaraz po pierwszym załadowaniu bez wchodzenia na ekran graczy, edycja płatna (lista, 403, brak w cache), odpowiedź 200 dla edycji płatnej wg katalogu nie trafia do cache, gra w pamięci przy zablokowanym IndexedDB.

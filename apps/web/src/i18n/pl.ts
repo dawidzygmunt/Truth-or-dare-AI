@@ -34,6 +34,7 @@ export const pl = {
     penaltyNone: 'Bez kar',
     penaltyShots: 'Shoty',
     start: 'Zacznij grę',
+    removeSymbol: '×',
   },
   game: {
     title: 'Gra',
