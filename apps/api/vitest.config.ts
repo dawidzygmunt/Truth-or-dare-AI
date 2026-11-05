@@ -9,7 +9,9 @@ export default defineConfig({
     conditions: ['@tod/source'],
     // Vitest runs in the server environment, which ignores `resolve.conditions`, so without this
     // alias the tests would need a built packages/contracts/dist, which a fresh clone does not have.
-    alias: { '@tod/contracts': resolve(import.meta.dirname, '../../packages/contracts/src/index.ts') },
+    alias: {
+      '@tod/contracts': resolve(import.meta.dirname, '../../packages/contracts/src/index.ts'),
+    },
   },
   test: {
     include: ['src/**/*.test.ts', 'test/**/*.test.ts', 'prisma/**/*.test.ts'],

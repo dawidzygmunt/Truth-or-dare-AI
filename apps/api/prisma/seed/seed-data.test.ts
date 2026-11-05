@@ -34,7 +34,8 @@ describe('SeedCardSchema', () => {
   });
 
   it('defaults a missing penalty to null', () => {
-    const { penaltyShots: _omitted, ...card } = validCard;
+    const card: Partial<SeedCard> = { ...validCard };
+    delete card.penaltyShots;
 
     expect(SeedCardSchema.parse(card).penaltyShots).toBeNull();
   });

@@ -34,7 +34,8 @@ describe('DeckResponseSchema', () => {
   });
 
   it('requires penaltyShots to be present, not just optional', () => {
-    const { penaltyShots: _omitted, ...withoutPenalty } = card;
+    const withoutPenalty: Partial<DeckCard> = { ...card };
+    delete withoutPenalty.penaltyShots;
 
     expect(DeckResponseSchema.safeParse({ ...deck, cards: [withoutPenalty] }).success).toBe(false);
   });
