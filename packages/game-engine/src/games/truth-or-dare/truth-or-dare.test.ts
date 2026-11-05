@@ -69,6 +69,13 @@ function play(
   }, start);
 }
 
+function cardsWithPenalty(penaltyShots: Card['penaltyShots']): Card[] {
+  return [
+    { id: 't', kind: 'truth', template: 'prawda', penaltyShots },
+    { id: 'd', kind: 'dare', template: 'wyzwanie', penaltyShots },
+  ];
+}
+
 describe('setupTruthOrDare', () => {
   it('starts waiting for the first turn', () => {
     const state = setup();
@@ -211,5 +218,90 @@ describe('truth or dare flow', () => {
     );
 
     expect(selectCurrentCard(state)?.text).toBe('Ola>Kuba>Kuba>Kuba');
+  });
+});
+
+describe('fail', () => {
+  it.each([
+    [2, 2],
+    [5, 5],
+    [null, 1],
+    [undefined, 1],
+  ])('in shots mode turns a penaltyShots of %s into a penalty of %s', (penaltyShots, shots) => {
+    const start = setup({ cards: cardsWithPenalty(penaltyShots), penaltyMode: 'shots' });
+
+    const state = play(reducer(), start, 'nextTurn', 'chooseDare', 'fail');
+
+    expect(selectPenalty(state)).toEqual({ player: 'Ola', shots });
+    expect(selectPhase(state)).toBe('awaitingTurn');
+    expect(selectCurrentCard(state)).toBeNull();
+  });
+
+  it('applies the penalty to the current player, not the first one', () => {
+    const start = setup({ cards: cardsWithPenalty(2), penaltyMode: 'shots' });
+
+    const state = play(
+      reducer(),
+      start,
+      'nextTurn',
+      'chooseDare',
+      'complete',
+      'nextTurn',
+      'chooseDare',
+      'fail',
+    );
+
+    expect(selectPenalty(state)).toEqual({ player: 'Kuba', shots: 2 });
+  });
+
+  it('in none mode sets no penalty and just ends the turn', () => {
+    const start = setup({ cards: cardsWithPenalty(2), penaltyMode: 'none' });
+
+    const state = play(reducer(), start, 'nextTurn', 'chooseDare', 'fail');
+
+    expect(selectPenalty(state)).toBeNull();
+    expect(selectPhase(state)).toBe('awaitingTurn');
+  });
+
+  it('nextTurn clears the penalty', () => {
+    const start = setup({ cards: cardsWithPenalty(2), penaltyMode: 'shots' });
+
+    const state = play(reducer(), start, 'nextTurn', 'chooseDare', 'fail', 'nextTurn');
+
+    expect(selectPenalty(state)).toBeNull();
+  });
+
+  it('never sums shots: a player failing again gets the penalty of the last card only', () => {
+    const reduce = reducer();
+    const start = setup({
+      players: ['Ola', 'Kuba'],
+      cards: cardsWithPenalty(3),
+      penaltyMode: 'shots',
+    });
+    const turnOfBoth = ['nextTurn', 'chooseDare', 'fail'] as const;
+
+    const state = play(reduce, start, ...turnOfBoth, ...turnOfBoth, ...turnOfBoth);
+
+    expect(selectPenalty(state)).toEqual({ player: 'Ola', shots: 3 });
+  });
+
+  it('keeps no per-player tally anywhere in state', () => {
+    const start = setup({ cards: cardsWithPenalty(3), penaltyMode: 'shots' });
+
+    const afterFails = play(
+      reducer(),
+      start,
+      'nextTurn',
+      'chooseDare',
+      'fail',
+      'nextTurn',
+      'chooseTruth',
+      'fail',
+      'nextTurn',
+    );
+
+    expect(Object.keys(afterFails).sort()).toEqual(Object.keys(start).sort());
+    expect(afterFails.queue).toEqual({ players: start.queue.players, nextIndex: 2 });
+    expect(selectPenalty(afterFails)).toBeNull();
   });
 });
