@@ -8,6 +8,7 @@ import {
   freeDeckPaths,
   isDeckPath,
   isFreeDeck,
+  removeOutdatedCaches,
   warmOfflineCaches,
   type CacheOpener,
 } from './offline-cache-policy.js';
@@ -24,6 +25,8 @@ const PAID_DECK = `/api/editions/${PAID_EDITION_SLUG}/deck`;
 function fakeCaches() {
   const stores = new Map<string, Map<string, Response>>();
   const opener: CacheOpener = {
+    keys: () => Promise.resolve([...stores.keys()]),
+    delete: (name) => Promise.resolve(stores.delete(name)),
     open(name) {
       const store = stores.get(name) ?? new Map<string, Response>();
       stores.set(name, store);
@@ -33,6 +36,9 @@ function fakeCaches() {
           store.set(path, response);
           return Promise.resolve();
         },
+        keys: () =>
+          Promise.resolve([...store.keys()].map((path) => new Request(`http://localhost${path}`))),
+        delete: (path) => Promise.resolve(store.delete(path)),
       });
     },
   };
@@ -194,6 +200,105 @@ describe('deckCachePlugin', () => {
   });
 });
 
+describe('deckCachePlugin.fetchDidSucceed', () => {
+  const requestFor = (path: string) => new Request(`http://localhost${path}`);
+
+  async function withCachedDeck() {
+    const fake = fakeCaches();
+    const deckCache = await fake.opener.open(FREE_DECKS_CACHE);
+    await deckCache.put(FREE_DECK, json(deckFixture));
+    return { ...fake, fetchDidSucceed: deckCachePlugin(fake.opener).fetchDidSucceed };
+  }
+
+  it.each([403, 404])('removes the cached deck on a %i and passes it on', async (status) => {
+    const { fetchDidSucceed, keys } = await withCachedDeck();
+    const response = json({}, status);
+
+    expect(await fetchDidSucceed({ request: requestFor(FREE_DECK), response })).toBe(response);
+    expect(keys(FREE_DECKS_CACHE)).toEqual([]);
+  });
+
+  it.each([200, 500, 503])('keeps the cached deck on a %i', async (status) => {
+    const { fetchDidSucceed, keys } = await withCachedDeck();
+
+    await fetchDidSucceed({ request: requestFor(FREE_DECK), response: json({}, status) });
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([FREE_DECK]);
+  });
+});
+
+describe('catalogCachePlugin.cacheDidUpdate', () => {
+  const OTHER_DECK = '/api/editions/gone/deck';
+
+  async function withCachedDecks() {
+    const fake = fakeCaches();
+    const deckCache = await fake.opener.open(FREE_DECKS_CACHE);
+    await deckCache.put(FREE_DECK, json(deckFixture));
+    await deckCache.put(OTHER_DECK, json(deckFixture));
+    return { ...fake, cacheDidUpdate: catalogCachePlugin(fake.opener).cacheDidUpdate };
+  }
+
+  it('removes decks that are not free in the refreshed catalog', async () => {
+    const { cacheDidUpdate, keys } = await withCachedDecks();
+
+    await cacheDidUpdate({ newResponse: json(catalogFixture) });
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([FREE_DECK]);
+  });
+
+  it('removes a deck that became paid', async () => {
+    const { cacheDidUpdate, keys } = await withCachedDecks();
+    const [game] = catalogFixture.games;
+    const editions = (game?.editions ?? []).map((edition) => ({ ...edition, tier: 'paid' }));
+
+    await cacheDidUpdate({ newResponse: json({ games: [{ ...game, editions }] }) });
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([]);
+  });
+
+  it.each([
+    ['is not JSON', new Response('<html>')],
+    ['breaks the contract', json({ games: 'nope' })],
+  ])('removes nothing when the new catalog %s', async (_label, newResponse) => {
+    const { cacheDidUpdate, keys } = await withCachedDecks();
+
+    await cacheDidUpdate({ newResponse });
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([FREE_DECK, OTHER_DECK]);
+  });
+});
+
+describe('removeOutdatedCaches', () => {
+  it('removes earlier versions of its own caches and nothing else', async () => {
+    const { opener } = fakeCaches();
+    const names = [
+      'tod-catalog',
+      'tod-free-decks',
+      'tod-catalog-v1',
+      'tod-free-decks-v1',
+      CATALOG_CACHE,
+      FREE_DECKS_CACHE,
+      'workbox-precache-v2-http://localhost/',
+      'tod-something-else',
+    ];
+    await Promise.all(names.map((name) => opener.open(name)));
+
+    await removeOutdatedCaches(opener);
+
+    expect(await opener.keys()).toEqual([
+      CATALOG_CACHE,
+      FREE_DECKS_CACHE,
+      'workbox-precache-v2-http://localhost/',
+      'tod-something-else',
+    ]);
+  });
+
+  it('versions both cache names, so a new release can drop what older ones stored', () => {
+    expect(CATALOG_CACHE).toMatch(/^tod-catalog-v\d+$/);
+    expect(FREE_DECKS_CACHE).toMatch(/^tod-free-decks-v\d+$/);
+  });
+});
+
 describe('catalogCachePlugin', () => {
   const { cacheWillUpdate } = catalogCachePlugin(fakeCaches().opener);
 
@@ -262,6 +367,34 @@ describe('warmOfflineCaches', () => {
     await warmOfflineCaches(opener, network);
 
     expect(keys(FREE_DECKS_CACHE)).toEqual([]);
+  });
+
+  it('removes a deck the api no longer serves', async () => {
+    const { opener, keys } = fakeCaches();
+    const deckCache = await opener.open(FREE_DECKS_CACHE);
+    await deckCache.put(FREE_DECK, json(deckFixture));
+    const network = fakeNetwork({
+      [CATALOG_PATH]: json(catalogFixture),
+      [FREE_DECK]: json({}, 403),
+    });
+
+    await warmOfflineCaches(opener, network);
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([]);
+  });
+
+  it('removes decks that are not free in the fresh catalog', async () => {
+    const { opener, keys } = fakeCaches();
+    const deckCache = await opener.open(FREE_DECKS_CACHE);
+    await deckCache.put(PAID_DECK, json(deckFixture));
+    const network = fakeNetwork({
+      [CATALOG_PATH]: json(catalogFixture),
+      [FREE_DECK]: json(deckFixture),
+    });
+
+    await warmOfflineCaches(opener, network);
+
+    expect(keys(FREE_DECKS_CACHE)).toEqual([FREE_DECK]);
   });
 
   it('stores nothing when the catalog fails', async () => {

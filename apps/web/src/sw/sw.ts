@@ -14,6 +14,7 @@ import {
   deckCachePlugin,
   FREE_DECKS_CACHE,
   isDeckPath,
+  removeOutdatedCaches,
   warmOfflineCaches,
 } from './offline-cache-policy.js';
 
@@ -26,6 +27,10 @@ clientsClaim();
 
 self.addEventListener('install', (event) => {
   event.waitUntil(warmOfflineCaches(self.caches));
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(removeOutdatedCaches(self.caches));
 });
 
 precacheAndRoute(self.__WB_MANIFEST);
