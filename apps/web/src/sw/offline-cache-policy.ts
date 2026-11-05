@@ -34,7 +34,7 @@ export function isDeckPath(pathname: string): boolean {
   return DECK_PATH.test(pathname);
 }
 
-/** Deck paths of free editions. An unreadable catalog yields none: paid cards must never slip in. */
+/** Deck paths of free editions. An unreadable catalog yields none, so writes fail closed. */
 export function freeDeckPaths(catalog: unknown): string[] {
   const parsed = CatalogResponseSchema.safeParse(catalog);
   if (!parsed.success) {

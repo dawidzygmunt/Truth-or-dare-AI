@@ -130,6 +130,26 @@ Zmiana przepływu użytkownika: test Playwright to krok 6. Tu weryfikacja jednor
 - **Limit czasu `webServer`**: pobranie obrazu Postgresa i buildy mogą przekroczyć domyślne 60 s, więc limit zostaje podniesiony.
 - **`reuseExistingServer` lokalnie**: serwer zostawiony na porcie 3100 pomija start bazy. Zachowanie Playwrighta, bez obejścia.
 
+## Poprawki po review
+
+Branch `fix/web-app-review`. Każda zmiana zaczęta od testu, który padł z właściwego powodu.
+
+**Podwójne stuknięcie.** „Zakończ grę” lądowało pod palcem po „Wykonane”. Akcja jest teraz w nagłówku obok imienia, poza `turn-actions`, i wymaga potwierdzenia (`end-game-confirm`, `end-game-cancel`). `ConfirmPanel` w `shared/ui` obsługuje też zastąpienie trwającej gry (`replace-game-confirm`, `replace-game-cancel`). Anulowanie jest pierwsze i dostaje fokus, a tekst nad przyciskami odsuwa je od miejsca stuknięcia. Drugie stuknięcie w „Wykonane” trafia teraz zwykle w „Prawda” albo „Wyzwanie” kolejnego gracza: nie niszczy gry, ale wybiera kartę. Świadomie niezmienione.
+
+**Cache.** Pluginy są w `offline-cache-policy.ts`. Zapis wymaga poprawnego 200 zgodnego ze schematem, a talia dodatkowo katalogu mówiącego `free`. Nowe: czyszczenie po odświeżeniu katalogu, usuwanie wpisu po 403 i 404, wersje nazw cache i sprzątanie w `activate`. Dokładny zakres gwarancji i zadanie przed `Entitlement`: ADR 0006.
+
+**Stan gry.** Migawka odrzuca stany, na których reduktor rzuca albo gra staje: nazwy niezgodne z regułami silnika, `currentPlayer` spoza kolejki, karę w trybie `none`, pusty stos prawd lub wyzwań. Reguły nazw sprawdza sam silnik przez `setupTruthOrDare`, bo `duplicateKey` nie jest eksportowany, a kopia rozjechałaby się z oryginałem. Wyjątek z reduktora w `dispatch` czyści grę i ustawia `game_corrupted`, który pokazuje katalog. `ErrorBoundary` w `app.tsx` łapie błędy renderowania.
+
+**Dostępność i telefon.** Po zmianie fazy fokus idzie na kartę albo `h1`. Region `aria-live` ogłasza gracza, kartę i karę. Po „Dodaj gracza” fokus wraca do pola, więc klawiatura zostaje. `Screen` respektuje `env(safe-area-inset-*)`. Linki tekstowe mają 48 px (`textActionClasses`).
+
+**Pozostałe.** Healthcheck przez TCP (`-h 127.0.0.1`), bo serwer startowy obrazu nasłuchuje tylko na gnieździe. Pomiar na świeżym kontenerze pokazał stan `socket=up tcp=down`. Limit czasu żądań to 10 s (`REQUEST_TIMEOUT_MS`), także przy czytaniu treści odpowiedzi, a wynik to istniejący błąd `offline`.
+
+**`keepNames`.** Bez tej opcji `GameError.name` w bundlu to `t`. Koszt jest duży: główny bundle rośnie z 400,6 kB do 482,6 kB (+20,5%), a po gzip ze 123,55 kB do 134,14 kB (+8,6%), bo bundler przestaje skracać nazwy funkcji i klas w całym kodzie. Tańszą drogą byłyby jawne nazwy w `GameError` w silniku, poza zakresem tego brancha.
+
+**Testy E2E.** `double-tap.spec.ts`, `mobile.spec.ts`, `compliance.spec.ts`, rozszerzony `age-gate.spec.ts`. `compliance.spec.ts` używa `helpers/mock-origin.ts`: własny serwer z prawdziwym `dist` i skryptowanym api, więc prawdziwy worker dostaje przez sieć odpowiedzi, których api nie daje. Działa na WebKit i Chromium, bez pomijania. `guest-game.spec.ts` przechodzi przez `end-game-confirm`, bo zakończenie gry ma teraz potwierdzenie.
+
+**Znane i niezrobione.** Synchronizacja wielu kart przeglądarki (ostatni zapis wygrywa), zachowanie `autoUpdate` i filtrowanie po `Edition.platforms`.
+
 ## Odstępstwa od planu (po implementacji)
 
 - Puste imię: przycisk „Dodaj gracza” jest wyłączony, gdy pole po przycięciu jest puste. To obsługa formularza, reguły graczy nadal egzekwuje silnik. `empty_player_name` ma tłumaczenie, ale z tego ekranu nie jest osiągalny.
