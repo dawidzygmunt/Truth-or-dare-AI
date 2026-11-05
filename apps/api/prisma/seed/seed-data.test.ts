@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { SeedCardSchema, SeedGameSchema, type SeedCard } from './seed-data.schema.js';
+import {
+  SeedCardSchema,
+  SeedEditionSchema,
+  SeedGameSchema,
+  type SeedCard,
+  type SeedEdition,
+  type SeedGame,
+} from './seed-data.schema.js';
 import truthOrDare from './truth-or-dare.json' with { type: 'json' };
 
 const validCard: SeedCard = {
@@ -43,6 +50,108 @@ describe('SeedCardSchema', () => {
   it('rejects a zero or fractional penalty', () => {
     expect(SeedCardSchema.safeParse({ ...validCard, penaltyShots: 0 }).success).toBe(false);
     expect(SeedCardSchema.safeParse({ ...validCard, penaltyShots: 1.5 }).success).toBe(false);
+  });
+
+  it.each([
+    ['an unclosed brace', '{player}, co { się stało?'],
+    ['a lone closing brace', '{player}, co } się stało?'],
+    ['an unclosed placeholder', '{player, co się stało?'],
+    ['a doubled brace', '{{player}}, co się stało?'],
+    ['an empty placeholder', '{player}, co {} się stało?'],
+  ])('rejects %s', (_, template) => {
+    expect(SeedCardSchema.safeParse({ ...validCard, template }).success).toBe(false);
+  });
+
+  it('rejects an unknown field, e.g. a misspelled penaltyShots', () => {
+    expect(SeedCardSchema.safeParse({ ...validCard, penaltyShot: 2 }).success).toBe(false);
+  });
+});
+
+const validEdition: SeedEdition = {
+  slug: 'edition-1',
+  name: 'Edycja',
+  tier: 'free',
+  productId: null,
+  intensity: 1,
+  ageRating: 18,
+  platforms: ['web'],
+  locale: 'pl',
+  isPublished: true,
+  cards: [validCard],
+};
+
+const validGame: SeedGame = {
+  slug: 'game-1',
+  name: 'Gra',
+  description: 'Opis',
+  engine: 'card_deck',
+  editions: [validEdition],
+};
+
+describe('SeedEditionSchema', () => {
+  it('accepts a valid free edition', () => {
+    expect(SeedEditionSchema.safeParse(validEdition).success).toBe(true);
+  });
+
+  it('rejects a published edition without cards, which would wipe it on seed', () => {
+    expect(SeedEditionSchema.safeParse({ ...validEdition, cards: [] }).success).toBe(false);
+  });
+
+  it('accepts an unpublished draft without cards', () => {
+    const draft = { ...validEdition, isPublished: false, cards: [] };
+
+    expect(SeedEditionSchema.safeParse(draft).success).toBe(true);
+  });
+
+  it('rejects a paid edition without a productId', () => {
+    const paid = { ...validEdition, tier: 'paid', productId: null };
+
+    expect(SeedEditionSchema.safeParse(paid).success).toBe(false);
+  });
+
+  it('accepts a paid edition with a productId', () => {
+    const paid = { ...validEdition, tier: 'paid', productId: 'prod_spicy' };
+
+    expect(SeedEditionSchema.safeParse(paid).success).toBe(true);
+  });
+
+  it('rejects an unknown field, e.g. a misspelled isPublished', () => {
+    expect(SeedEditionSchema.safeParse({ ...validEdition, isPublish: true }).success).toBe(false);
+  });
+});
+
+describe('SeedGameSchema', () => {
+  it('accepts a valid game', () => {
+    expect(SeedGameSchema.safeParse(validGame).success).toBe(true);
+  });
+
+  it('rejects an unknown field', () => {
+    expect(SeedGameSchema.safeParse({ ...validGame, engines: 'card_deck' }).success).toBe(false);
+  });
+
+  it('rejects a card id reused in another edition of the game', () => {
+    const other: SeedEdition = { ...validEdition, slug: 'edition-2', cards: [validCard] };
+    const game = { ...validGame, editions: [validEdition, other] };
+
+    expect(SeedGameSchema.safeParse(game).success).toBe(false);
+  });
+
+  it('rejects a card id repeated inside one edition', () => {
+    const edition: SeedEdition = { ...validEdition, cards: [validCard, validCard] };
+
+    expect(SeedGameSchema.safeParse({ ...validGame, editions: [edition] }).success).toBe(false);
+  });
+
+  it('accepts distinct card ids across editions', () => {
+    const other: SeedEdition = {
+      ...validEdition,
+      slug: 'edition-2',
+      cards: [{ ...validCard, id: 'card-2' }],
+    };
+
+    expect(
+      SeedGameSchema.safeParse({ ...validGame, editions: [validEdition, other] }).success,
+    ).toBe(true);
   });
 });
 
