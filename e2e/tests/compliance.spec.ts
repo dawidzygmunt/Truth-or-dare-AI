@@ -1,5 +1,5 @@
 import type { CatalogEdition, CatalogResponse, DeckResponse } from '@tod/contracts';
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { EDITION_SLUG, confirmAge } from './helpers/app.js';
 import { startMockOrigin, type MockOrigin } from './helpers/mock-origin.js';
 import { waitForServiceWorkerControl } from './helpers/service-worker.js';
@@ -74,18 +74,20 @@ async function removeFromDeckCache(page: Page, path: string): Promise<void> {
   );
 }
 
-const test = base.extend<{ origin: MockOrigin }>({
-  origin: async ({ baseURL: _baseURL }, use) => {
-    const origin = await startMockOrigin();
-    origin.api.set(CATALOG_PATH, { body: catalogWith('free') });
-    origin.api.set(FREE_DECK, { body: deckOf(EDITION_SLUG) });
-    await use(origin);
-    await origin.close();
-  },
+let origin: MockOrigin;
+
+test.beforeEach(async () => {
+  origin = await startMockOrigin();
+  origin.api.set(CATALOG_PATH, { body: catalogWith('free') });
+  origin.api.set(FREE_DECK, { body: deckOf(EDITION_SLUG) });
+});
+
+test.afterEach(async () => {
+  await origin.close();
 });
 
 /** First visit: the worker warmed its caches once it controls the page. */
-async function openWithWorker(page: Page, origin: MockOrigin): Promise<void> {
+async function openWithWorker(page: Page): Promise<void> {
   await page.goto(origin.url);
   await confirmAge(page);
   await waitForServiceWorkerControl(page);
@@ -93,11 +95,8 @@ async function openWithWorker(page: Page, origin: MockOrigin): Promise<void> {
 }
 
 test.describe('offline cache against a real service worker', () => {
-  test('a 200 for a paid edition does not land in the free deck cache', async ({
-    page,
-    origin,
-  }) => {
-    await openWithWorker(page, origin);
+  test('a 200 for a paid edition does not land in the free deck cache', async ({ page }) => {
+    await openWithWorker(page);
     origin.api.set(PAID_DECK, { body: deckOf(PAID_SLUG) });
 
     const paid = await fetchThroughWorker(page, PAID_DECK);
@@ -112,8 +111,8 @@ test.describe('offline cache against a real service worker', () => {
     expect(await cachedDeckPaths(page)).not.toContain(PAID_DECK);
   });
 
-  test('a 403 is passed on and not stored', async ({ page, origin }) => {
-    await openWithWorker(page, origin);
+  test('a 403 is passed on and not stored', async ({ page }) => {
+    await openWithWorker(page);
     origin.api.set(PAID_DECK, { status: 403, body: {} });
 
     expect((await fetchThroughWorker(page, PAID_DECK)).status).toBe(403);
@@ -121,8 +120,8 @@ test.describe('offline cache against a real service worker', () => {
     expect(await cachedDeckPaths(page)).toEqual([FREE_DECK]);
   });
 
-  test('a catalog refresh removes a deck that stopped being free', async ({ page, origin }) => {
-    await openWithWorker(page, origin);
+  test('a catalog refresh removes a deck that stopped being free', async ({ page }) => {
+    await openWithWorker(page);
     origin.api.set(CATALOG_PATH, { body: catalogWith('paid') });
 
     await fetchThroughWorker(page, CATALOG_PATH);
@@ -131,8 +130,8 @@ test.describe('offline cache against a real service worker', () => {
   });
 
   for (const status of [403, 404]) {
-    test(`a ${status} for a cached deck removes it`, async ({ page, origin }) => {
-      await openWithWorker(page, origin);
+    test(`a ${status} for a cached deck removes it`, async ({ page }) => {
+      await openWithWorker(page);
       origin.api.set(FREE_DECK, { status, body: {} });
 
       await fetchThroughWorker(page, FREE_DECK);
@@ -141,8 +140,8 @@ test.describe('offline cache against a real service worker', () => {
     });
   }
 
-  test('a 200 that breaks the contract does not overwrite good data', async ({ page, origin }) => {
-    await openWithWorker(page, origin);
+  test('a 200 that breaks the contract does not overwrite good data', async ({ page }) => {
+    await openWithWorker(page);
     origin.api.set(CATALOG_PATH, { body: { games: 'nope' } });
     origin.api.set(FREE_DECK, { body: { cards: 'nope' } });
 
@@ -155,10 +154,7 @@ test.describe('offline cache against a real service worker', () => {
     expect((await fetchThroughWorker(page, FREE_DECK)).body).toEqual(deckOf(EDITION_SLUG));
   });
 
-  test('activation removes caches of earlier releases, and only those', async ({
-    page,
-    origin,
-  }) => {
+  test('activation removes caches of earlier releases, and only those', async ({ page }) => {
     origin.api.set('/api/blank', { body: {} });
     // A page of this origin that never registers the worker, so the old caches exist first.
     await page.goto(`${origin.url}/api/blank`);
@@ -168,7 +164,7 @@ test.describe('offline cache against a real service worker', () => {
       );
     });
 
-    await openWithWorker(page, origin);
+    await openWithWorker(page);
 
     await expect.poll(() => page.evaluate(() => caches.has('tod-free-decks'))).toBe(false);
     const names = await page.evaluate(() => caches.keys());
