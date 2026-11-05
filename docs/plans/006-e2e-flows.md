@@ -1,6 +1,6 @@
 # 006: E2E w Playwright, przepływy użytkownika (faza 1, krok 6)
 
-Status: w toku
+Status: zrealizowany
 
 Zadania z roadmapy: T6.1–T6.4 (`docs/roadmap.md`). ADR-y powiązane: brak.
 
@@ -33,13 +33,13 @@ Kryteria akceptacji: każdy scenariusz z listy poniżej przechodzi na obu projek
 - **Brak kumulacji**: test wymusza dziewięć porażek z rzędu (trzech graczy, trzy rundy), więc ten sam gracz dostaje trzy kary. Suma tych kar wynosiłaby co najmniej 3. Granicą jest największa wartość pojedynczej karty z talii pobranej z `/api/editions/truth-or-dare-klasyczna/deck` (`penaltyShots ?? 1`). Każda widoczna kara musi być dodatnią liczbą całkowitą nie większą niż ta granica, a imię w karze musi być imieniem gracza, który właśnie zawiódł. Test czyta dane talii, nie zasady silnika.
 - **Offline**: po age gate test czeka na `navigator.serviceWorker.ready`, potem sonduje (`expect.poll`), aż `navigator.serviceWorker.controller !== null`, i dopiero wtedy wywołuje `context.setOffline(true)`. Rozgrzewka z fazy `install` workera ma wtedy dane w cache. Bez `waitForTimeout`; tylko asercje z oczekiwaniem i sondowanie.
 - **Selektory**: tylko `getByRole` i `getByTestId`, nigdy klasy CSS. Teksty UI są po polsku i pochodzą z i18n, więc tam, gdzie to możliwe, używamy `data-testid` z listy w planie 005.
-- **Pomocniki** (`e2e/tests/helpers/`): `confirmAge(page)`, `openSetup(page)` (katalog → edycja), `addPlayers(page, names)`, `startGame(page, { players, penaltyMode })`, `currentPlayer(page)`, `playTurn(page, { kind, outcome })`, `waitForServiceWorkerControl(page)`. Pomocniki wykonują akcje użytkownika i nie zawierają reguł gry.
+- **Pomocniki** (`e2e/tests/helpers/`): `confirmAge`, `openAsGuest`, `addPlayers`, `startGame({ players, penaltyMode })`, `expectCurrentPlayer`, `drawCard`, `markDone`, `markNotDone`, `readPenalty`, `waitForServiceWorkerControl`. Pomocniki wykonują akcje użytkownika i nie zawierają reguł gry.
 - **Izolacja**: testy nie dzielą kontekstu; domyślny fixture `page` tworzy nowy kontekst na test. Testy nie zależą od kolejności (`fullyParallel: true` zostaje).
 
 ## Pliki do zmiany
 
 ```
-e2e/tests/helpers/app.ts          (nowy) akcje użytkownika: age gate, katalog, ustawienia, tury
+e2e/tests/helpers/app.ts            (nowy) akcje użytkownika: age gate, ustawienia, tury, kara
 e2e/tests/helpers/service-worker.ts (nowy) oczekiwanie na kontrolę service workera
 e2e/tests/age-gate.spec.ts        (nowy) bramka 18+, pamięć po odświeżeniu, odmowa
 e2e/tests/guest-game.spec.ts      (nowy) gość, 3 graczy, 5 tur, rotacja z zawinięciem
@@ -70,7 +70,11 @@ Aplikacja już istnieje, więc testy powinny w większości przejść od razu. D
    2. `shots`, „wykonane”: kolejny gracz bez kary;
    3. `none`, „nie wykonane”: bez `penalty` i bez `next-turn`, od razu następny gracz;
    4. brak kumulacji: dziewięć porażek z rzędu w `shots`, każda kara to wartość jednej karty z talii, nigdy suma.
-5. `offline.spec.ts`: po age gate i `waitForServiceWorkerControl` ustawienie `context.setOffline(true)`, potem pełny przepływ (katalog, ustawienia, 3 graczy, start, tura z kartą, „wykonane”). Red, bo: bez oczekiwania na kontrolę workera pierwsze żądanie do api nie ma cache (dowód: wariant bez czekania, jeśli da się go odtworzyć; w przeciwnym razie błędne oczekiwanie).
+5. `offline.spec.ts`: po age gate i `waitForServiceWorkerControl` ustawienie `context.setOffline(true)`, potem pełny przepływ (katalog, ustawienia, 3 graczy, start, tura z kartą, „wykonane”). Red, bo: bez oczekiwania na kontrolę workera pierwsze żądanie do api nie ma cache (dowód: wariant bez czekania).
+   1. gra offline bez przeładowania (ustawienia, talia z cache workera, „nie wykonane” z karą);
+   2. przeładowanie offline otwiera aplikację z cache i da się grać;
+   3. gra w toku wraca po przeładowaniu offline;
+   4. każdy z trzech testów sprawdza, że sieć naprawdę zniknęła: żądanie `/api/health`, którego worker nie cache'uje, musi się nie udać.
 
 Wytyczne (z `CLAUDE.md`): selektory przez `getByRole` / `getByTestId`; projekty `iphone-webkit` (iPhone 15) i `pixel-chromium` (Pixel 7); nie zmieniamy ani nie usuwamy istniejącego testu, żeby przeszedł.
 
@@ -97,4 +101,9 @@ Wytyczne (z `CLAUDE.md`): selektory przez `getByRole` / `getByTestId`; projekty 
 
 ## Odstępstwa od planu (po implementacji)
 
-Wypełniane po zakończeniu.
+- Dodatkowe testy ponad listę: wejście prosto na `/game` nie omija bramki, odmowa nie jest zapamiętywana, kolejność graczy w ustawieniach, koniec gry czyści „kontynuuj”, odświeżenie w turze bez wybranej karty, trzy testy offline zamiast jednego.
+- Pomocniki mają inne nazwy niż w szkicu (`openAsGuest`, `drawCard`, `markDone`, `markNotDone`, `readPenalty`, `expectCurrentPlayer`); `playTurn` i `openSetup` okazały się zbędne.
+- `e2e/playwright.config.ts` i `e2e/tests/smoke.spec.ts` bez zmian.
+- Pierwszy przebieg: 44 z 46 zielone. Dwa testy (po jednym na projekt) padły przez błąd w teście, nie w aplikacji: element `player-item` zawiera też przycisk usuwania („Ania×”), więc `toHaveText` zamieniono na `toContainText`.
+- Dowód, że testy potrafią zawieść (każdy scenariusz tymczasowo zepsuty i cofnięty): zły gracz w rotacji (zawinięcie po trzecim), zła kara i zły gracz kary, odwrócone oczekiwania bramki 18+, zły tekst karty i gracz po odświeżeniu, wyczyszczone IndexedDB przed odświeżeniem (stan nie wraca), brak czekania na kontrolę workera (offline nie startuje), brak `setOffline` (strażnik sieci pada). Brak kumulacji sprawdzony na zmodyfikowanym, niezacommitowanym bundlu (`dist`) z sumowaniem kar: test pada z `Expected: <= 2, Received: 3`.
+- Stabilność: `--repeat-each=3` (138 testów) i dodatkowo `--repeat-each=5 --workers=8` (230 testów) bez żadnego niepowodzenia ani ponowienia.
