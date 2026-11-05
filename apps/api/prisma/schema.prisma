@@ -1,0 +1,71 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GameEngine {
+  card_deck
+}
+
+enum EditionTier {
+  free
+  paid
+}
+
+enum Platform {
+  web
+  android
+}
+
+enum CardKind {
+  truth
+  dare
+  statement
+  challenge
+}
+
+model Game {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  name        String
+  engine      GameEngine
+  description String
+  editions    Edition[]
+}
+
+model Edition {
+  id          String      @id @default(uuid())
+  gameId      String
+  game        Game        @relation(fields: [gameId], references: [id])
+  slug        String      @unique
+  name        String
+  tier        EditionTier
+  productId   String?
+  intensity   Int
+  ageRating   Int
+  platforms   Platform[]
+  locale      String
+  isPublished Boolean     @default(false)
+  cards       Card[]
+
+  @@index([gameId])
+}
+
+model Card {
+  id           String   @id @default(uuid())
+  editionId    String
+  edition      Edition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  kind         CardKind
+  template     String
+  tags         String[]
+  intensity    Int
+  penaltyShots Int?
+
+  @@index([editionId])
+}

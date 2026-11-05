@@ -30,7 +30,15 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@swc/core"
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "prisma"
+    ],
+    "ignoredBuiltDependencies": [
+      "cpu-features",
+      "protobufjs",
+      "ssh2"
     ]
   }
 }
