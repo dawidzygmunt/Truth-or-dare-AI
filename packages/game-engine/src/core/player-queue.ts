@@ -53,8 +53,7 @@ export function takeTurn(queue: PlayerQueue): Turn {
   };
 }
 
-export function neighboursOf(queue: PlayerQueue, player: string): Neighbours {
-  const { players } = queue;
+export function neighboursOf(players: readonly string[], player: string): Neighbours {
   const index = players.indexOf(player);
   return { left: circularAt(players, index - 1), right: circularAt(players, index + 1) };
 }

@@ -91,15 +91,15 @@ describe('neighboursOf', () => {
   const queue = queueOf(['Ola', 'Kuba', 'Ania']);
 
   it('returns the previous player as left and the next one as right', () => {
-    expect(neighboursOf(queue, 'Kuba')).toEqual({ left: 'Ola', right: 'Ania' });
+    expect(neighboursOf(queue.players, 'Kuba')).toEqual({ left: 'Ola', right: 'Ania' });
   });
 
   it('wraps around both ends', () => {
-    expect(neighboursOf(queue, 'Ola')).toEqual({ left: 'Ania', right: 'Kuba' });
-    expect(neighboursOf(queue, 'Ania')).toEqual({ left: 'Kuba', right: 'Ola' });
+    expect(neighboursOf(queue.players, 'Ola')).toEqual({ left: 'Ania', right: 'Kuba' });
+    expect(neighboursOf(queue.players, 'Ania')).toEqual({ left: 'Kuba', right: 'Ola' });
   });
 
   it('gives the same neighbour on both sides with two players', () => {
-    expect(neighboursOf(queueOf(['Ola', 'Kuba']), 'Ola')).toEqual({ left: 'Kuba', right: 'Kuba' });
+    expect(neighboursOf(['Ola', 'Kuba'], 'Ola')).toEqual({ left: 'Kuba', right: 'Kuba' });
   });
 });
