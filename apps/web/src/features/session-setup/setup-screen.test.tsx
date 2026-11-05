@@ -41,6 +41,23 @@ describe('SetupScreen', () => {
     expect(screen.getByLabelText(pl.setup.playerName)).toHaveValue('');
   });
 
+  it('colours the avatars by position, cycling through the four tones', async () => {
+    stubApi({ [DECK]: { body: deckFixture } });
+    renderApp({ route: ROUTE });
+
+    for (const name of ['Ola', 'Kuba', 'Marek', 'Zuza', 'Ania']) {
+      await addPlayer(name);
+    }
+
+    expect(screen.getAllByTestId('player-avatar').map((avatar) => avatar.dataset.tone)).toEqual([
+      'pink',
+      'cyan',
+      'violet',
+      'orange',
+      'pink',
+    ]);
+  });
+
   it('returns focus to the name field, so the keyboard stays open', async () => {
     stubApi({ [DECK]: { body: deckFixture } });
     renderApp({ route: ROUTE });

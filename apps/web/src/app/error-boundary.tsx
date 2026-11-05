@@ -26,8 +26,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return this.props.children;
     }
     return (
-      <Screen title={pl.fatalError.title}>
-        <p className="text-neutral-400">{pl.fatalError.description}</p>
+      <Screen title={pl.fatalError.title} subtitle={pl.fatalError.description} centered>
         <Button
           data-testid="fatal-error-restart"
           onClick={() => {

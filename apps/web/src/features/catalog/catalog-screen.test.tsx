@@ -80,6 +80,19 @@ describe('CatalogScreen', () => {
     );
   });
 
+  it('shows the resume card with the running game and no invented progress', async () => {
+    stubApi({ [CATALOG]: { body: catalogFixture } });
+    const store = createTestStore();
+    store.getState().start({ players: ['Ola', 'Kuba'], cards: cardsFixture, penaltyMode: 'none' });
+    renderApp({ store });
+
+    const card = await screen.findByTestId('resume-game');
+
+    expect(card).toHaveTextContent('Wróć do gry');
+    expect(card).toHaveTextContent(pl.catalog.resumeGame);
+    expect(card).not.toHaveTextContent(/Runda|\d/u);
+  });
+
   it('explains that a broken game was ended', async () => {
     stubApi({ [CATALOG]: { body: catalogFixture } });
     const store = createTestStore();
