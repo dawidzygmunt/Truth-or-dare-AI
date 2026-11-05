@@ -1,3 +1,5 @@
+import type { CardKind } from './deck.js';
+
 /** Base of all domain errors. `code` is stable, so the UI can map it to a translated message. */
 export abstract class GameError extends Error {
   abstract readonly code: string;
@@ -24,5 +26,13 @@ export class DuplicatePlayerNameError extends GameError {
 
   constructor(readonly playerName: string) {
     super(`Player name "${playerName}" is already taken`);
+  }
+}
+
+export class MissingCardKindError extends GameError {
+  readonly code = 'missing_card_kind';
+
+  constructor(readonly kind: CardKind) {
+    super(`The deck has no cards of kind "${kind}"`);
   }
 }
