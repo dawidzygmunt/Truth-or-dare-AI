@@ -120,6 +120,16 @@ describe('catalog api', () => {
       await request(app.getHttpServer()).get('/editions/nope/deck').expect(404);
     });
 
+    it.each([
+      ['a NUL byte', '%00'],
+      ['upper case letters', 'Klasyczna'],
+      ['a space', 'two%20words'],
+      ['an encoded slash', 'a%2Fb'],
+      ['an encoded dot segment', '%2E%2E'],
+    ])('answers 404, not 500, for a slug with %s', async (_, slug) => {
+      await request(app.getHttpServer()).get(`/editions/${slug}/deck`).expect(404);
+    });
+
     it('answers 404 for an unpublished edition', async () => {
       const response = await request(app.getHttpServer())
         .get('/editions/draft-edition/deck')

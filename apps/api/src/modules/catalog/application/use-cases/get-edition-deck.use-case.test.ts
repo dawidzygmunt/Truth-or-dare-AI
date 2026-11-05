@@ -51,6 +51,16 @@ describe('GetEditionDeck', () => {
     await expect(getEditionDeck.execute('nope')).rejects.toBeInstanceOf(EditionNotFoundError);
   });
 
+  it.each([
+    ['a NUL byte', '\u0000'],
+    ['upper case letters', 'Klasyczna'],
+    ['a path separator', 'a/b'],
+    ['an empty string', ''],
+  ])('treats a slug with %s as not found without asking the repository', async (_, slug) => {
+    await expect(getEditionDeck.execute(slug)).rejects.toBeInstanceOf(EditionNotFoundError);
+    expect(repository.slugLookups).toEqual([]);
+  });
+
   it('treats an unpublished edition as not found, even a paid one', async () => {
     repository.addGame(
       aGame({

@@ -115,6 +115,12 @@ describe('SeedEditionSchema', () => {
     expect(SeedEditionSchema.safeParse(paid).success).toBe(true);
   });
 
+  it('rejects a slug the deck endpoint could never serve', () => {
+    const edition = { ...validEdition, slug: 'Edycja Klasyczna' };
+
+    expect(SeedEditionSchema.safeParse(edition).success).toBe(false);
+  });
+
   it('rejects an unknown field, e.g. a misspelled isPublished', () => {
     expect(SeedEditionSchema.safeParse({ ...validEdition, isPublish: true }).success).toBe(false);
   });

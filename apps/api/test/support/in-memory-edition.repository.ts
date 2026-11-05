@@ -7,6 +7,9 @@ export class InMemoryEditionRepository implements EditionRepository {
   /** Every edition id whose cards were read, so tests can prove a locked deck is never loaded. */
   readonly cardLookups: string[] = [];
 
+  /** Every slug that was looked up, so tests can prove a malformed slug never reaches the store. */
+  readonly slugLookups: string[] = [];
+
   private readonly games: GameWithEditions[] = [];
   private readonly cards = new Map<string, Card[]>();
 
@@ -29,6 +32,7 @@ export class InMemoryEditionRepository implements EditionRepository {
   }
 
   findPublishedBySlug(slug: string): Promise<Edition | null> {
+    this.slugLookups.push(slug);
     const edition = this.games
       .flatMap((game) => game.editions)
       .find((candidate) => candidate.slug === slug && candidate.isPublished);

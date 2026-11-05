@@ -3,6 +3,7 @@ import {
   EditionTierSchema,
   GameEngineSchema,
   PlatformSchema,
+  SlugSchema,
 } from '@tod/contracts';
 import { z } from 'zod';
 
@@ -34,7 +35,7 @@ export const SeedCardSchema = z.strictObject({
 
 export const SeedEditionSchema = z
   .strictObject({
-    slug: z.string().min(1),
+    slug: SlugSchema,
     name: z.string().min(1),
     tier: EditionTierSchema,
     productId: z.string().min(1).nullable().default(null),
