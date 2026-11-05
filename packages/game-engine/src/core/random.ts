@@ -1,3 +1,7 @@
+// Web-standard global. Declared locally because the engine compiles without DOM or Node types;
+// this emits nothing and shadows no runtime binding.
+declare const crypto: { getRandomValues(array: Uint32Array): Uint32Array };
+
 /** Source of randomness. Injected everywhere, and kept outside game state so state stays JSON. */
 export interface Random {
   /** Returns a uniformly distributed integer from `[0, maxExclusive)`. */
@@ -21,6 +25,20 @@ function fromUint32Source(nextUint32: () => number): Random {
       return value % maxExclusive;
     },
   };
+}
+
+/** Production generator backed by the platform CSPRNG. Holds no state worth restoring. */
+export function createCryptoRandom(): Random {
+  const buffer = new Uint32Array(1);
+  return fromUint32Source(() => {
+    const [value = 0] = crypto.getRandomValues(buffer);
+    return value;
+  });
+}
+
+/** Returns a random element. Throws `RangeError` for an empty list, which is a programmer error. */
+export function pickOne<T>(items: readonly T[], random: Random): T {
+  return items[random.nextInt(items.length)] as T;
 }
 
 /** Deterministic generator (mulberry32) for tests. Its position is not serializable. */
