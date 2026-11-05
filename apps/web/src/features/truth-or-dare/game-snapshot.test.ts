@@ -67,6 +67,56 @@ describe('game snapshot', () => {
     expect(readSnapshot({ version: SNAPSHOT_VERSION, game })).toBeNull();
   });
 
+  describe('states the reducer cannot continue from', () => {
+    const stored = (game: unknown) => ({ version: SNAPSHOT_VERSION, game });
+    const choosing = () => gameAfter([{ type: 'nextTurn' }]);
+
+    it.each([
+      ['the same name twice', ['Ola', 'Ola']],
+      ['names differing only in case', ['Ola', 'OLA']],
+      ['names differing only in a zero width space', ['Ola', 'O\u200Bla']],
+      ['the same name in another normal form', ['Zo\u00E9', 'Zoe\u0301']],
+    ])('rejects %s', (_label, players) => {
+      const game = { ...choosing(), queue: { players, nextIndex: 0 }, currentPlayer: 'Ola' };
+
+      expect(readSnapshot(stored(game))).toBeNull();
+    });
+
+    it('rejects a blank player name', () => {
+      const game = { ...choosing(), queue: { players: ['Ola', '\u200B'], nextIndex: 0 } };
+
+      expect(readSnapshot(stored(game))).toBeNull();
+    });
+
+    it('rejects a current player outside the queue', () => {
+      expect(readSnapshot(stored({ ...choosing(), currentPlayer: 'Zosia' }))).toBeNull();
+    });
+
+    it('accepts no current player before the first turn', () => {
+      expect(readSnapshot(stored(gameAfter([])))).not.toBeNull();
+    });
+
+    it('rejects a penalty in none mode', () => {
+      const penalized = gameAfter([{ type: 'nextTurn' }, { type: 'chooseDare' }, { type: 'fail' }]);
+
+      expect(readSnapshot(stored({ ...penalized, penaltyMode: 'none' }))).toBeNull();
+    });
+
+    it.each(['truth', 'dare'] as const)('rejects an empty %s pile', (kind) => {
+      const game = choosing();
+      const deck = { ...game.deck, [kind]: { cards: [], nextIndex: 0 } };
+
+      expect(readSnapshot(stored({ ...game, deck }))).toBeNull();
+    });
+
+    it('accepts empty piles this game never draws from', () => {
+      const game = choosing();
+
+      expect(game.deck.statement.cards).toEqual([]);
+      expect(readSnapshot(stored(game))).not.toBeNull();
+    });
+  });
+
   it('rejects a pile with a broken position', () => {
     const game = gameAfter([]);
     const deck = { ...game.deck, truth: { ...game.deck.truth, nextIndex: -1 } };

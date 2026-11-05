@@ -69,9 +69,15 @@ function CatalogContent() {
 
 export function CatalogScreen() {
   const hasGame = useGameStore((state) => state.game !== null);
+  const error = useGameStore((state) => state.error);
 
   return (
     <Screen title={pl.catalog.title}>
+      {!hasGame && error !== null && (
+        <p role="alert" data-testid="game-error" className="text-red-400">
+          {pl.gameErrors[error]}
+        </p>
+      )}
       {hasGame && (
         <Link data-testid="resume-game" className={buttonClasses.primary} to="/game">
           {pl.catalog.resume}

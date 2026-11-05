@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { TruthOrDareState } from '@tod/game-engine';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { pl } from '../i18n/pl.js';
 import { createQueryClient } from '../shared/api/query-client.js';
+import { rememberAgeConfirmed } from '../shared/storage/age-gate-storage.js';
 import { cardsFixture, catalogFixture, deckFixture, FREE_EDITION_SLUG } from '../test/fixtures.js';
 import { createTestStore, stubApi } from '../test/render-app.js';
 import type { GameStore } from '../features/truth-or-dare/game-store.js';
@@ -32,6 +34,46 @@ describe('App', () => {
     fetchStub = stubApi({
       '/api/catalog': { body: catalogFixture },
       [DECK]: { body: deckFixture },
+    });
+  });
+
+  describe('error boundary', () => {
+    /** Render-time crash: React refuses an object as a child, which no store code can catch. */
+    function storeThatCrashesRendering() {
+      const store = storeWithGame();
+      const game = store.getState().game;
+      store.setState({
+        game: {
+          ...game,
+          phase: 'cardDrawn',
+          currentCard: { id: 'x', kind: 'truth', text: {}, penaltyShots: null },
+        } as unknown as TruthOrDareState,
+      });
+      return store;
+    }
+
+    beforeEach(() => {
+      rememberAgeConfirmed();
+      // React logs the caught error; the fallback is what matters here.
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    });
+
+    it('shows a translated fallback instead of a blank page', () => {
+      renderAppAt('/game', storeThatCrashesRendering());
+
+      expect(screen.getByRole('heading', { level: 1, name: pl.fatalError.title })).toBeVisible();
+    });
+
+    it('starts over from the fallback, without the broken game', async () => {
+      const store = storeThatCrashesRendering();
+      renderAppAt('/game', store);
+
+      await userEvent.click(screen.getByRole('button', { name: pl.fatalError.restart }));
+
+      expect(store.getState().game).toBeNull();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: pl.catalog.title }),
+      ).toBeVisible();
     });
   });
 

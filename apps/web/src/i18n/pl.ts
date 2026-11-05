@@ -68,6 +68,11 @@ export const pl = {
       'Potwierdź przyciskiem „Dodaj”.',
     ],
   },
+  fatalError: {
+    title: 'Coś poszło nie tak',
+    description: 'Aplikacja napotkała błąd. Trwająca gra zostanie zakończona.',
+    restart: 'Zacznij od nowa',
+  },
   apiErrors: {
     edition_locked: 'Ta edycja jest zablokowana.',
     not_found: 'Nie znaleziono tej edycji.',
@@ -81,5 +86,6 @@ export const pl = {
     duplicate_player_name: 'Imiona graczy muszą być różne.',
     missing_card_kind: 'Ta talia jest niekompletna.',
     action_not_allowed: 'Tego nie można teraz zrobić.',
+    game_corrupted: 'Nie udało się kontynuować tej gry. Zacznij nową.',
   },
 };

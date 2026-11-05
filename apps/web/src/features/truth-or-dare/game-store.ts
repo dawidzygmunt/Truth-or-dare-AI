@@ -13,12 +13,13 @@ import type { KeyValueStorage } from '../../shared/storage/key-value-storage.js'
 import { createSnapshot, readSnapshot, type GameSnapshot } from './game-snapshot.js';
 
 export type GameStorage = KeyValueStorage<GameSnapshot>;
-export type GameActionErrorCode = TruthOrDareActionError['code'];
+/** `game_corrupted`: the engine threw on the state, so the game could not go on. */
+export type GameActionErrorCode = TruthOrDareActionError['code'] | 'game_corrupted';
 export type GameSetupErrorCode = TruthOrDareSetupError['code'];
 
 export interface GameStoreState {
   readonly game: TruthOrDareState | null;
-  /** Code of the last rejected action. The game itself stays as it was. */
+  /** Code of the last rejected action. The game stays as it was, unless it is `game_corrupted`. */
   readonly error: GameActionErrorCode | null;
   /** False until the stored game was looked up, so screens do not act on a missing game too soon. */
   readonly hydrated: boolean;
@@ -79,11 +80,17 @@ export function createGameStore({ random, storage }: GameStoreDependencies): Gam
         if (game === null) {
           return;
         }
-        const result = reduce(game, action);
-        if (result.ok) {
-          commit(result.value);
-        } else {
-          set({ error: result.error.code });
+        try {
+          const result = reduce(game, action);
+          if (result.ok) {
+            commit(result.value);
+          } else {
+            set({ error: result.error.code });
+          }
+        } catch {
+          // The reducer trusts its state, so this game can never get past here: start clean.
+          set({ game: null, error: 'game_corrupted' });
+          ignoreFailure(storage.clear());
         }
       },
 

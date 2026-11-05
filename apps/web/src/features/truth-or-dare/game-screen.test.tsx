@@ -91,6 +91,31 @@ describe('GameScreen', () => {
     expect(screen.getByTestId('current-player')).toHaveTextContent('Ola');
   });
 
+  it('goes back to the catalog with an explanation when the game breaks', async () => {
+    stubApi({ '/api/catalog': { body: catalogFixture } });
+    const store = createTestStore();
+    store.getState().start({
+      players: ['Ola', 'Kuba'],
+      cards: [
+        { id: 'truth', kind: 'truth', template: '{randomPlayer}', penaltyShots: null },
+        { id: 'dare', kind: 'dare', template: '{randomPlayer}', penaltyShots: null },
+      ],
+      penaltyMode: 'none',
+    });
+    const game = store.getState().game;
+    if (game === null) throw new Error('no game');
+    store.setState({
+      game: { ...game, queue: { ...game.queue, players: ['Ola', 'Ola'] }, currentPlayer: 'Ola' },
+    });
+    renderApp({ route: '/game', store });
+    await screen.findByTestId('current-player');
+
+    await click(pl.game.truth);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(pl.gameErrors.game_corrupted);
+    expect(screen.getByRole('heading', { level: 1, name: pl.catalog.title })).toBeVisible();
+  });
+
   it('restores a game from storage after a reload', async () => {
     const storage = createMemoryStorage();
     const previous = createTestStore(storage);

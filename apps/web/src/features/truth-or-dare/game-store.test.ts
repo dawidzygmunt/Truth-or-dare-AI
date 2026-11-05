@@ -178,6 +178,60 @@ describe('game store', () => {
     });
   });
 
+  describe('when the reducer throws', () => {
+    /** Slips past the snapshot check on purpose: the store must survive what the schema misses. */
+    function brokenGameStore(storage: GameStorage = createMemoryStorage()) {
+      const store = createGameStore({ random: createSeededRandom(1), storage });
+      store.getState().start({
+        players: ['Ola', 'Kuba'],
+        cards: [
+          { id: 'truth', kind: 'truth', template: '{randomPlayer}', penaltyShots: null },
+          { id: 'dare', kind: 'dare', template: '{randomPlayer}', penaltyShots: null },
+        ],
+        penaltyMode: 'none',
+      });
+      const game = store.getState().game ?? fail('no game');
+      store.setState({
+        game: { ...game, queue: { ...game.queue, players: ['Ola', 'Ola'] }, currentPlayer: 'Ola' },
+      });
+      return store;
+    }
+
+    it('clears the game into a fresh start with an error', () => {
+      const store = brokenGameStore();
+
+      expect(() => {
+        store.getState().dispatch({ type: 'chooseTruth' });
+      }).not.toThrow();
+
+      expect(store.getState().game).toBeNull();
+      expect(store.getState().error).toBe('game_corrupted');
+    });
+
+    it('forgets the stored game', async () => {
+      const storage = createMemoryStorage();
+      const store = brokenGameStore(storage);
+      await flush();
+
+      store.getState().dispatch({ type: 'chooseTruth' });
+      await flush();
+
+      expect(storage.stored).toBeUndefined();
+    });
+
+    it('lets a new game start and clears the error', () => {
+      const store = brokenGameStore();
+      store.getState().dispatch({ type: 'chooseTruth' });
+
+      store
+        .getState()
+        .start({ players: ['Zosia', 'Janek'], cards: cardsFixture, penaltyMode: 'none' });
+
+      expect(store.getState().error).toBeNull();
+      expect(store.getState().game?.currentPlayer).toBe('Zosia');
+    });
+  });
+
   it('calls the reducer exactly once per action', () => {
     let draws = 0;
     const seeded = createSeededRandom(1);
@@ -268,6 +322,23 @@ describe('game store', () => {
       await store.getState().hydrate();
 
       expect(store.getState().hydrated).toBe(true);
+      expect(store.getState().game).toBeNull();
+      expect(storage.stored).toBeUndefined();
+    });
+
+    it('drops a stored game the reducer would choke on', async () => {
+      const storage = createMemoryStorage();
+      const first = startedStore('none', storage);
+      await flush();
+      const game = first.getState().game ?? fail('no game');
+      storage.stored = createSnapshot({
+        ...game,
+        queue: { ...game.queue, players: ['Ola', 'Ola'] },
+      });
+
+      const store = createGameStore({ random: createSeededRandom(1), storage });
+      await store.getState().hydrate();
+
       expect(store.getState().game).toBeNull();
       expect(storage.stored).toBeUndefined();
     });

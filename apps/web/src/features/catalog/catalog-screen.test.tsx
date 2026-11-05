@@ -80,6 +80,15 @@ describe('CatalogScreen', () => {
     );
   });
 
+  it('explains that a broken game was ended', async () => {
+    stubApi({ [CATALOG]: { body: catalogFixture } });
+    const store = createTestStore();
+    store.setState({ error: 'game_corrupted' });
+    renderApp({ store });
+
+    expect(await screen.findByTestId('game-error')).toHaveTextContent(pl.gameErrors.game_corrupted);
+  });
+
   it('does not offer to continue without a game', async () => {
     stubApi({ [CATALOG]: { body: catalogFixture } });
     const { store } = renderApp();
