@@ -23,10 +23,10 @@ export interface GameStoreState {
   /** False until the stored game was looked up, so screens do not act on a missing game too soon. */
   readonly hydrated: boolean;
   /** Replaces any current game. Returns the error code when the engine refuses the setup. */
-  start(config: TruthOrDareConfig): GameSetupErrorCode | null;
-  dispatch(action: TruthOrDareAction): void;
-  hydrate(): Promise<void>;
-  reset(): void;
+  readonly start: (config: TruthOrDareConfig) => GameSetupErrorCode | null;
+  readonly dispatch: (action: TruthOrDareAction) => void;
+  readonly hydrate: () => Promise<void>;
+  readonly reset: () => void;
 }
 
 export type GameStore = StoreApi<GameStoreState>;

@@ -56,7 +56,7 @@ describe('game snapshot', () => {
   );
 
   it('rejects a damaged game', () => {
-    const { queue: _queue, ...withoutQueue } = gameAfter([{ type: 'nextTurn' }]);
+    const withoutQueue = { ...gameAfter([{ type: 'nextTurn' }]), queue: undefined };
 
     expect(readSnapshot({ version: SNAPSHOT_VERSION, game: withoutQueue })).toBeNull();
   });

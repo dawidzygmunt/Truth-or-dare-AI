@@ -94,7 +94,7 @@ describe('SetupScreen', () => {
     expect(store.getState().game?.currentPlayer).toBe('Ola');
   });
 
-  it('starts without penalties by default', async () => {
+  it('starts without penalties by default', () => {
     stubApi({ [DECK]: { body: deckFixture } });
     renderApp({ route: ROUTE });
 

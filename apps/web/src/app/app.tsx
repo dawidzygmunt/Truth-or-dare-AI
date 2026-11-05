@@ -1,10 +1,23 @@
-import { pl } from '../i18n/pl.js';
+import type { QueryClient } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router';
+import type { GameStore } from '../features/truth-or-dare/game-store.js';
+import { AgeGate } from './age-gate.js';
+import { AppRoutes } from './app-routes.js';
+import { Providers } from './providers.js';
 
-export function App() {
+interface AppProps {
+  readonly store: GameStore;
+  readonly queryClient: QueryClient;
+}
+
+export function App({ store, queryClient }: AppProps) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-2 bg-neutral-950 p-6 text-neutral-50">
-      <h1 className="text-3xl font-bold">{pl.app.title}</h1>
-      <p className="text-neutral-400">{pl.app.comingSoon}</p>
-    </main>
+    <Providers store={store} queryClient={queryClient}>
+      <BrowserRouter>
+        <AgeGate>
+          <AppRoutes />
+        </AgeGate>
+      </BrowserRouter>
+    </Providers>
   );
 }

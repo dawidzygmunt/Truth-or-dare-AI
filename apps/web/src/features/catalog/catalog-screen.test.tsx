@@ -18,7 +18,9 @@ describe('CatalogScreen', () => {
     renderApp();
 
     expect(screen.getByRole('status')).toHaveTextContent(pl.common.loading);
-    expect(await screen.findByRole('heading', { level: 2, name: 'Prawda czy wyzwanie' })).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Prawda czy wyzwanie' }),
+    ).toBeVisible();
     expect(screen.getByRole('link', { name: /Klasyczna/ })).toHaveAttribute(
       'href',
       `/setup/${FREE_EDITION_SLUG}`,

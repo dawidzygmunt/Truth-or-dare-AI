@@ -9,9 +9,7 @@ import { createTestStore, renderApp, stubApi } from '../../test/render-app.js';
 
 function renderGame(penaltyMode: PenaltyMode = 'none') {
   const store = createTestStore();
-  store
-    .getState()
-    .start({ players: ['Ola', 'Kuba', 'Ania'], cards: cardsFixture, penaltyMode });
+  store.getState().start({ players: ['Ola', 'Kuba', 'Ania'], cards: cardsFixture, penaltyMode });
   renderApp({ route: '/game', store });
   return store;
 }
@@ -118,9 +116,7 @@ describe('GameScreen', () => {
     stubApi({ '/api/catalog': { body: catalogFixture } });
     renderApp({ route: '/game' });
 
-    expect(
-      await screen.findByRole('heading', { level: 1, name: pl.catalog.title }),
-    ).toBeVisible();
+    expect(await screen.findByRole('heading', { level: 1, name: pl.catalog.title })).toBeVisible();
   });
 
   it('ends the game and returns to the catalog', async () => {
@@ -131,8 +127,6 @@ describe('GameScreen', () => {
     await click(pl.game.end);
 
     expect(store.getState().game).toBeNull();
-    expect(
-      await screen.findByRole('heading', { level: 1, name: pl.catalog.title }),
-    ).toBeVisible();
+    expect(await screen.findByRole('heading', { level: 1, name: pl.catalog.title })).toBeVisible();
   });
 });

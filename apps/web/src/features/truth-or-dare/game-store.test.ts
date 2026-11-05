@@ -124,7 +124,7 @@ describe('game store', () => {
 
     it('wraps around after the last player', () => {
       const store = startedStore();
-      for (const _player of ['Ola', 'Kuba', 'Ania']) {
+      for (let turn = 0; turn < 3; turn += 1) {
         store.getState().dispatch({ type: 'chooseTruth' });
         store.getState().dispatch({ type: 'complete' });
       }
