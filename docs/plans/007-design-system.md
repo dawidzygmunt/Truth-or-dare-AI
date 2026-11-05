@@ -1,6 +1,6 @@
 # 007: Design SZOT w `apps/web` (warstwa wizualna po fazie 1)
 
-Status: w toku
+Status: zrealizowany
 
 Zadania z roadmapy: brak osobnego zadania, praca po zamknięciu fazy 1 na podstawie eksportu Claude Design (`docs/design/screens/plan-szot.dc.html`). ADR-y powiązane: 0006 (cache service workera, precache fontów).
 
@@ -52,12 +52,12 @@ Stany bez projektu, zbudowane z tego samego języka: age gate, `/install`, ekran
 
 | Para w designie | Kontrast z białym | Po zmianie |
 | --- | --- | --- |
-| CTA `0.74 0.19 350` → `0.64 0.2 300` | 2,53 i 3,66 | `0.58 0.19 350` → `0.58 0.2 300`, 4,6 |
-| Kafel `0.7 0.19 350` → `0.6 0.2 320` | 2,94 i 4,38 | `0.58 0.19 350` → `0.58 0.2 320`, 4,6 |
-| Karta `0.68 0.2 320` → `0.58 0.21 300` | 3,17 i 4,73 | `0.58 0.2 320` → `0.58 0.21 300`, 4,6 |
+| CTA `0.74 0.19 350` → `0.64 0.2 300` | 2,53 i 3,66 | `0.58 0.19 350` → `0.58 0.2 300`, min. 4,64 |
+| Kafel `0.7 0.19 350` → `0.6 0.2 320` | 2,94 i 4,38 | `0.58 0.19 350` → `0.58 0.2 320`, min. 4,69 |
+| Karta `0.68 0.2 320` → `0.58 0.21 300` | 3,17 i 4,73 | prawda `0.58 0.2 320` → `0.58 0.21 300`, min. 4,67; wyzwanie `0.58 0.19 350` → `0.58 0.2 330`, min. 4,71 |
 | Awatar fiolet `0.66 0.2 300` | 3,38 | kolor bez zmian, litera ciemna (`#1a0a14`, 5,66) |
 
-  Tekst na gradientach jest w pełni biały, bez przezroczystości z designu (`.7`, `.8`). Wyciszony tekst na tle ma `.6` zamiast `.45–.5`, bo na szklanych kartach `.45` daje 4,31:1. Ceną jest ciemniejszy róż niż w makiecie, poświata zostaje bez zmian.
+  Tekst na gradientach jest w pełni biały, bez przezroczystości z designu (`.7`, `.8`). Wyciszony tekst na tle ma `.6` zamiast `.45–.5`, bo na szklanych kartach `.45` daje 4,31:1. Ceną jest ciemniejszy róż niż w makiecie, poświata zostaje bez zmian. Minima zmierzone na pikselach gradientów wyrenderowanych w Chromium.
 - **Panel potwierdzenia jest wyśrodkowaną nakładką.** CTA stoi przy dolnej krawędzi, więc panel w tym miejscu postawiłby „potwierdź” dokładnie pod drugim tapnięciem i złamał test `double-tap`. Nakładka trzyma przyciski z dala od dołu ekranu, a tło zjada drugie tapnięcie.
 - **Kafle wyboru stoją na środku, nie przy dolnej krawędzi.** Dzięki temu nie nachodzą na „Zrobione”: podwójne tapnięcie nie wybiera za następnego gracza. Pilnuje tego nowy test e2e.
 - **`current-player` to nadal `<h1>` z samym imieniem.** „Kolej:” stoi obok nagłówka, bo testy czytają w nim dokładnie imię i tam trafia fokus.
@@ -91,9 +91,9 @@ e2e/tests/{offline,mobile,double-tap}.spec.ts        (zmiana) fonty offline, red
 3. `apps/web/src/features/session-setup/setup-screen.test.tsx`: awatary graczy kolejno w kolorach z cyklu. Red, bo: brak awatarów.
 4. `apps/web/src/features/truth-or-dare/game-screen.test.tsx`: awatar bieżącego gracza ma kolor z jego pozycji na liście. Red, bo: brak awatara.
 5. `apps/web/src/features/catalog/catalog-screen.test.tsx`: karta wznowienia ma tekst „Wróć do gry” i pojawia się tylko przy trwającej grze. Istniejące testy już sprawdzają widoczność; test dopisany dla treści karty. Red, bo: stara etykieta.
-6. `apps/web/src/i18n/copy.test.ts`: nazwa „SZOT”, hasło, „W co gramy?” i brak „Gotowi na szoty?”. Red, bo: stare teksty.
+6. `apps/web/src/i18n/pl.test.ts`: nazwa „SZOT”, hasło, „W co gramy?” i brak „Gotowi na szoty?”. Red, bo: stare teksty.
 7. `e2e/tests/offline.spec.ts`: fonty z polskimi znakami ładują się po odcięciu sieci. Red, bo: `woff2` poza globami precache.
-8. `e2e/tests/mobile.spec.ts`: przy `prefers-reduced-motion` znak wodny nie ma animacji. Red, bo: brak animacji w ogóle do sprawdzenia w drugą stronę, więc test sprawdza oba tryby.
+8. `e2e/tests/mobile.spec.ts`: znak wodny pływa, a przy `prefers-reduced-motion` nie ma animacji. Test sprawdza oba tryby, żeby nie przechodził przy braku animacji.
 9. `e2e/tests/double-tap.spec.ts`: kafle wyboru nie nachodzą na przyciski karty.
 
 ## Kroki
@@ -110,3 +110,13 @@ e2e/tests/{offline,mobile,double-tap}.spec.ts        (zmiana) fonty offline, red
 - **Tekst e2e w elementach z test id**: `current-player`, `card-kind` i `penalty` są czytane dosłownie. Ozdoby idą poza te elementy, a wielkie litery przez CSS.
 - **Precache**: fonty zwiększają pierwsze pobranie o kilkadziesiąt kB. Sprawdzamy rozmiar przed i po.
 - **Emoji w etykietach**: renderują się czcionką systemu, więc wyglądają różnie na iOS i Androidzie.
+
+## Odstępstwa od planu (po implementacji)
+
+- `Wszystkie gry` zostaje jako etykieta nad kaflami, bez selektora ostrości. Przy jednej grze w katalogu brzmi trochę na wyrost, ale to układ z designu.
+- Nagłówki `Kto dziś gra?` i tekst kart mieszczą się w jednej kolumnie bez wymuszonych złamań z makiety, bo szerokość jest płynna.
+- Karta „Kolej:” ma 16 px zamiast 14 px, awatar 36 px zamiast 30 px: makieta ma 300 px szerokości, ekran docelowy 390 px.
+- Wyciszony tekst przy zaznaczonej karcie trybu kar ma `.8`, bo tło jest tam jaśniejsze.
+- Tytuł `Gra` zostaje tylko na ekranie ładowania gry, poza nim `h1` to imię gracza.
+- Ikona to litera S narysowana ścieżką, bez fontu, żeby `icon.svg` nie zależał od fontów systemu.
+- `docs/design/screens/implemented/home-pro.png` powstał na podstawionym katalogu z nazwami próbnymi, bo seed nie ma płatnej edycji ani drugiej gry.
