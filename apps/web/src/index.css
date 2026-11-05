@@ -1,1 +1,15 @@
 @import 'tailwindcss';
+@import '../../../docs/design/tokens/tokens.css';
+
+@layer base {
+  html {
+    background-color: var(--color-bg-deep);
+    color: var(--color-ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
+  }
+}
