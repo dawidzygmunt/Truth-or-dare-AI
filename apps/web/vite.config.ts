@@ -46,8 +46,6 @@ export default defineConfig({
     }),
   ],
   resolve: { conditions: ['@tod/source'] },
-  // `GameError` names itself after its class; minified, every domain error would be called `t`.
-  build: { rolldownOptions: { output: { keepNames: true } } },
   server: { port: 5173, proxy: apiProxy },
   preview: { port: 4173, proxy: apiProxy },
 });
