@@ -72,11 +72,44 @@ describe('api layer boundaries', () => {
       await boundaryErrors(`${api}/catalog/application/imports-other-module-domain.ts`),
     ).toHaveLength(1);
   });
+
+  it.each(['nest', 'prisma', 'stripe'])('forbids application from importing %s', async (name) => {
+    expect(await boundaryErrors(`${api}/catalog/application/imports-${name}.ts`)).toHaveLength(1);
+  });
+
+  it.each(['generated', 'database'])('forbids application from importing %s code', async (name) => {
+    expect(await boundaryErrors(`${api}/catalog/application/imports-${name}.ts`)).toHaveLength(1);
+  });
+
+  it.each(['infrastructure', 'generated', 'database'])(
+    'forbids presentation from importing %s',
+    async (name) => {
+      expect(await boundaryErrors(`${api}/catalog/presentation/imports-${name}.ts`)).toHaveLength(
+        1,
+      );
+    },
+  );
+
+  it('allows presentation to import @nestjs packages and application', async () => {
+    expect(await boundaryErrors(`${api}/catalog/presentation/nest-controller.ts`)).toEqual([]);
+  });
+
+  it('allows infrastructure to import the database module', async () => {
+    expect(await boundaryErrors(`${api}/catalog/infrastructure/prisma-repo.ts`)).toEqual([]);
+  });
+
+  it('allows the Nest module file to wire infrastructure, presentation and database', async () => {
+    expect(await boundaryErrors(`${api}/catalog/catalog.module.ts`)).toEqual([]);
+  });
 });
 
 describe('package boundaries', () => {
   it('forbids web from importing api code', async () => {
     expect(await boundaryErrors('apps/web/src/imports-api.ts')).toHaveLength(1);
+  });
+
+  it.each(['database', 'generated'])('forbids web from importing api %s code', async (name) => {
+    expect(await boundaryErrors(`apps/web/src/imports-api-${name}.ts`)).toHaveLength(1);
   });
 
   it('forbids game-engine from importing apps', async () => {

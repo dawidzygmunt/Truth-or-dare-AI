@@ -8,6 +8,9 @@ const boundaries = /** @type {import('eslint').ESLint.Plugin} */ (
 
 const apiModules = 'apps/api/src/modules/*';
 const apiLayers = ['api-domain', 'api-application', 'api-infrastructure', 'api-presentation'];
+// Shared api code that only infrastructure may reach: the Prisma wiring and the generated client.
+const apiPersistence = ['api-database', 'api-generated'];
+const frameworkSources = ['@nestjs/*', '@prisma/*', 'stripe'];
 
 /**
  * Architectural boundaries (see docs/architecture.md):
@@ -62,6 +65,8 @@ export function boundariesConfig({ rootPath, tsconfig }) {
             capture: ['module'],
             partialMatch: false,
           },
+          { type: 'api-database', pattern: 'apps/api/src/database', partialMatch: false },
+          { type: 'api-generated', pattern: 'apps/api/src/generated', partialMatch: false },
           { type: 'api', pattern: 'apps/api', partialMatch: false },
           { type: 'web', pattern: 'apps/web', partialMatch: false },
           { type: 'game-engine', pattern: 'packages/game-engine', partialMatch: false },
@@ -79,20 +84,29 @@ export function boundariesConfig({ rootPath, tsconfig }) {
                 from: { element: { type: 'api-domain' } },
                 disallow: [
                   { to: { element: { type: '!api-domain' }, module: { origin: 'local' } } },
-                  {
-                    to: {
-                      module: { origin: 'external', source: ['@nestjs/*', '@prisma/*', 'stripe'] },
-                    },
-                  },
+                  { to: { module: { origin: 'external', source: frameworkSources } } },
                 ],
                 message: 'domain must not depend on {{to.element.types}}{{to.module.source}}',
               },
               {
                 from: { element: { type: 'api-application' } },
-                disallow: {
-                  to: { element: { type: ['api-infrastructure', 'api-presentation', 'api'] } },
-                },
-                message: 'application must not depend on {{to.element.types}}',
+                disallow: [
+                  {
+                    to: {
+                      element: {
+                        type: ['api-infrastructure', 'api-presentation', 'api', ...apiPersistence],
+                      },
+                    },
+                  },
+                  { to: { module: { origin: 'external', source: frameworkSources } } },
+                ],
+                message:
+                  'application must not depend on {{to.element.types}}{{to.module.source}}; use a port',
+              },
+              {
+                from: { element: { type: 'api-presentation' } },
+                disallow: { to: { element: { type: ['api-infrastructure', ...apiPersistence] } } },
+                message: 'presentation must call use cases, not {{to.element.types}}',
               },
               {
                 from: { element: { type: apiLayers } },
@@ -109,7 +123,7 @@ export function boundariesConfig({ rootPath, tsconfig }) {
               },
               {
                 from: { element: { type: 'web' } },
-                disallow: { to: { element: { type: ['api', ...apiLayers] } } },
+                disallow: { to: { element: { type: ['api', ...apiPersistence, ...apiLayers] } } },
                 message: 'web talks to api over HTTP only; share types via @tod/contracts',
               },
               {
