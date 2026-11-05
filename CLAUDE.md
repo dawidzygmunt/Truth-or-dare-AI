@@ -24,7 +24,7 @@ pnpm dev                              # web + api równolegle
 pnpm test                             # wszystkie testy unit/integration
 pnpm --filter game-engine test:watch  # TDD na silniku gier
 pnpm --filter api test                # testy api (wymaga Dockera dla Testcontainers)
-pnpm test:e2e                         # Playwright (buduje web i odpala api)
+pnpm test:e2e                         # Playwright (wymaga Dockera: baza tod-e2e na 55432, buduje web i odpala api)
 pnpm lint && pnpm typecheck           # przed każdym commitem
 pnpm --filter api prisma migrate dev  # nowa migracja
 pnpm --filter api db:seed             # seed gier, edycji i kart

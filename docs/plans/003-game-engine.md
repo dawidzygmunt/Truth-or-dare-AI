@@ -156,7 +156,7 @@ packages/game-engine/src/
 
 ## Poprawki po review
 
-Branch `fix/game-engine-review`. Publiczne API z `src/index.ts`, kształt stanu i sygnatura reduktora bez zmian. Decyzje o stanie i reduktorze zapisuje `docs/adr/0006-game-engine-state-model.md`.
+Branch `fix/game-engine-review`. Publiczne API z `src/index.ts`, kształt stanu i sygnatura reduktora bez zmian. Decyzje o stanie i reduktorze zapisuje `docs/adr/0007-game-engine-state-model.md`.
 
 - **Mutanty, które przechodziły 102 testy.** Pętla odrzucania w `random.ts` (usunięta, `limit = UINT32_RANGE`, `>` zamiast `>=`) oraz tasowanie z `Math.min(nextInt, nextInt)` i z nietasowanym pierwszym elementem. Dodano `createRandomFromUint32Source(next)` wyeksportowane z `core/random.ts` (nie z `index.ts`) i testy ze skryptowanym źródłem (`[0xffffffff, 0xfffffffe]` dla `nextInt(3)` daje `2` po dwóch odczytach, `nextInt(2 ** 32)` niczego nie odrzuca), test równomierności `shuffle([0, 1, 2])` na 6000 prób z seedem oraz te same przypadki `RangeError` dla crypto co dla seedowanego. Każdy mutant po wprowadzeniu daje czerwony test.
 - **Nazwy graczy.** Nazwa jest zapisywana w NFC i przycinana, a kluczem duplikatu jest nazwa bez znaków formatujących (`\p{Cf}`), w NFC i małymi literami. Pusta jest nazwa, w której po usunięciu `\p{Z}`, `\p{Cc}` i `\p{Cf}` nic nie zostaje. „Zoé” w NFC i w NFD oraz „Ola” i „Ola” ze spacją zerowej szerokości na końcu to teraz duplikaty. Zapisana nazwa zachowuje to, co wpisał gracz, poza przycięciem i NFC.

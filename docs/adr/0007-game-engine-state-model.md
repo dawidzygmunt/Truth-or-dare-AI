@@ -1,4 +1,4 @@
-# 0006: Model stanu i reduktora w `game-engine`
+# 0007: Model stanu i reduktora w `game-engine`
 
 ## Status
 
