@@ -80,8 +80,15 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 
 - [ ] TD.1 Błąd przy starcie api, gdy brakuje `DATABASE_URL` na produkcji (dziś `/health` jest zielony, a `/catalog` daje 500)
 - [ ] TD.2 `prisma` w zależnościach produkcyjnych lub warunkowy `postinstall`; opisać migrację i seed na produkcji
-- [ ] TD.3 Czyszczenie cache'u service workera, gdy darmowa edycja staje się płatna (ADR o service workerze)
+- [x] TD.3 Czyszczenie cache'u service workera, gdy darmowa edycja staje się płatna (ADR 0006)
 - [ ] TD.4 Filtrowanie gier według silnika i routing per gra przed fazą 2 (dziś każda gra startuje przepływ prawdy czy wyzwania)
+
+## Znane ograniczenia fazy 1
+
+- Wiele kart przeglądarki: ostatni zapis wygrywa.
+- Podwójne stuknięcie „Wykonane” może dobrać kartę następnemu graczowi (gra zostaje).
+- `GameError.name` jest skracany w produkcji; identyfikatorem pozostaje `code`. `keepNames` cofnięte: +82 kB bundla.
+- Niesprawdzone: GitHub Actions, prawdziwe urządzenia, Safari, czytnik ekranu.
 
 ## Otwarte decyzje
 

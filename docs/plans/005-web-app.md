@@ -158,3 +158,5 @@ Branch `fix/web-app-review`. Każda zmiana zaczęta od testu, który padł z wł
 - CI bez zmian: `pnpm test:e2e` sam uruchamia bazę, a `ubuntu-latest` ma Dockera z compose. Nie sprawdzone na GitHub Actions, tylko lokalnie.
 - Smoke test Playwrighta bez zmian: age gate ma `main` i `h1`.
 - Weryfikacja jednorazowym skryptem (usuniętym) na `iphone-webkit` i `pixel-chromium`: pełny przepływ, 5 tur, odświeżenie z kartą i z karą, tryb `none`, offline zaraz po pierwszym załadowaniu bez wchodzenia na ekran graczy, edycja płatna (lista, 403, brak w cache), odpowiedź 200 dla edycji płatnej wg katalogu nie trafia do cache, gra w pamięci przy zablokowanym IndexedDB.
+
+`keepNames` z punktu 13 cofnięte po scaleniu: +82,0 kB (+20,5%) bundla, 10,6 kB po gzip, tylko dla nazw błędów w logach. UI opiera się na `code`.
