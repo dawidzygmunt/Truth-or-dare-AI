@@ -1,0 +1,462 @@
+{
+  "slug": "truth-or-dare",
+  "name": "Prawda czy wyzwanie",
+  "description": "Klasyczna gra towarzyska: wybierz prawdę albo wyzwanie.",
+  "engine": "card_deck",
+  "editions": [
+    {
+      "slug": "truth-or-dare-klasyczna",
+      "name": "Klasyczna",
+      "tier": "free",
+      "intensity": 1,
+      "ageRating": 18,
+      "platforms": ["web", "android"],
+      "locale": "pl",
+      "isPublished": true,
+      "cards": [
+        {
+          "id": "tod-klasyczna-truth-001",
+          "kind": "truth",
+          "template": "{player}, jaka była Twoja największa wpadka w szkole?",
+          "tags": ["personal"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-002",
+          "kind": "truth",
+          "template": "{player}, jaki był najdziwniejszy zakup w Twoim życiu?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-003",
+          "kind": "truth",
+          "template": "{player}, do jakiego serialu wstyd Ci się przyznać?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-004",
+          "kind": "truth",
+          "template": "{player}, jaka jest Twoja najbardziej irracjonalna obawa?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-005",
+          "kind": "truth",
+          "template": "{player}, jaki jest najgorszy prezent, jaki Ci się trafił?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-006",
+          "kind": "truth",
+          "template": "{player}, jakie kłamstwo z dzieciństwa wciąż Cię śmieszy?",
+          "tags": ["personal"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-007",
+          "kind": "truth",
+          "template": "{player}, jaką piosenkę znasz na pamięć, choć wolisz się do tego nie przyznawać?",
+          "tags": ["music"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-008",
+          "kind": "truth",
+          "template": "{player}, jaki jest Twój najdziwniejszy nawyk?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-009",
+          "kind": "truth",
+          "template": "{player}, jakie jest najdziwniejsze hasło w Twojej historii wyszukiwania?",
+          "tags": ["funny"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-truth-010",
+          "kind": "truth",
+          "template": "{player}, czego najbardziej żałujesz z ostatniego roku?",
+          "tags": ["personal"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-011",
+          "kind": "truth",
+          "template": "{player}, kto przy tym stole najlepiej nadawałby się na prezydenta i dlaczego?",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-012",
+          "kind": "truth",
+          "template": "{player}, kogo spośród osób przy stole zabierasz na bezludną wyspę?",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-013",
+          "kind": "truth",
+          "template": "{player}, co naprawdę myślisz o guście muzycznym osoby: {randomPlayer}?",
+          "tags": ["group"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-014",
+          "kind": "truth",
+          "template": "{player}, za co najbardziej cenisz osobę: {playerLeft}?",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-015",
+          "kind": "truth",
+          "template": "{player}, jaka jest najzabawniejsza historia z udziałem osoby: {randomPlayer}?",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-016",
+          "kind": "truth",
+          "template": "{player}, jakie jest Twoje najgorsze wspomnienie z randki?",
+          "tags": ["personal"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-truth-017",
+          "kind": "truth",
+          "template": "{player}, jaki zakaz rodziców łamiesz do dziś?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-018",
+          "kind": "truth",
+          "template": "{player}, jaka jest najdziwniejsza rzecz w Twoim pokoju?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-019",
+          "kind": "truth",
+          "template": "{player}, jakiej umiejętności najbardziej Ci brakuje?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-020",
+          "kind": "truth",
+          "template": "{player}, jaki masz ukryty talent?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-021",
+          "kind": "truth",
+          "template": "{player}, jaka plotka o Tobie jest najzabawniejsza?",
+          "tags": ["funny"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-022",
+          "kind": "truth",
+          "template": "{player}, jak wygląda Twój idealny leniwy dzień?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-023",
+          "kind": "truth",
+          "template": "{player}, jaka jest Twoja ulubiona wymówka, żeby się z czegoś wykręcić?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-024",
+          "kind": "truth",
+          "template": "{player}, komu najdłużej nie odpisujesz i dlaczego?",
+          "tags": ["personal"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-025",
+          "kind": "truth",
+          "template": "{player}, gdyby Twoje życie było filmem, jaki miałoby tytuł?",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-026",
+          "kind": "truth",
+          "template": "{player}, której aplikacji używasz najczęściej, choć wolisz o tym nie mówić?",
+          "tags": ["funny"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-027",
+          "kind": "truth",
+          "template": "{player}, jakiego tematu unikasz przy rodzinnym stole?",
+          "tags": ["personal"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-truth-028",
+          "kind": "truth",
+          "template": "{player}, kto przy tym stole zna Cię najlepiej i po czym to widać?",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-029",
+          "kind": "truth",
+          "template": "{player}, czego zazdrościsz osobie: {playerRight}?",
+          "tags": ["group"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-truth-030",
+          "kind": "truth",
+          "template": "{player}, jaka jest najlepsza rada, której nigdy nie stosujesz?",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-001",
+          "kind": "dare",
+          "template": "{player}, zaśpiewaj refren swojej ulubionej piosenki.",
+          "tags": ["music"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-002",
+          "kind": "dare",
+          "template": "{player}, naśladuj wybraną osobę przy stole, aż ktoś zgadnie, kto to.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-003",
+          "kind": "dare",
+          "template": "{player}, opowiedz dowcip i nie zaśmiej się przy tym.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-004",
+          "kind": "dare",
+          "template": "{player}, mów z dowolnym akcentem do swojej następnej tury.",
+          "tags": ["funny"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-005",
+          "kind": "dare",
+          "template": "{player}, zrób 10 przysiadów.",
+          "tags": ["active"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-006",
+          "kind": "dare",
+          "template": "{player}, pokaż swój najlepszy taneczny ruch.",
+          "tags": ["active"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-007",
+          "kind": "dare",
+          "template": "{player}, wymyśl rymowankę o osobie: {randomPlayer}.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-008",
+          "kind": "dare",
+          "template": "{player}, powiedz osobie: {playerLeft} trzy szczere komplementy.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-009",
+          "kind": "dare",
+          "template": "{player}, zamień się miejscami z osobą: {playerRight} do swojej następnej tury.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-010",
+          "kind": "dare",
+          "template": "{player}, pokaż wszystkim ostatni mem zapisany w telefonie.",
+          "tags": ["funny"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-dare-011",
+          "kind": "dare",
+          "template": "{player}, do swojej następnej tury odpowiadaj na pytania wyłącznie pytaniami.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-012",
+          "kind": "dare",
+          "template": "{player}, opisz swój dzień jak komentator sportowy.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-013",
+          "kind": "dare",
+          "template": "{player}, poruszaj się i mów jak robot do swojej następnej tury.",
+          "tags": ["active"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-014",
+          "kind": "dare",
+          "template": "{player}, wymień 10 miast na literę P.",
+          "tags": ["brain"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-015",
+          "kind": "dare",
+          "template": "{player}, narysuj z zamkniętymi oczami portret osoby: {randomPlayer}.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-016",
+          "kind": "dare",
+          "template": "{player}, wyślij bliskiej osobie wiadomość z miłym komplementem.",
+          "tags": ["personal"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-017",
+          "kind": "dare",
+          "template": "{player}, zrób deskę i wytrzymaj, aż ktoś odliczy do 20.",
+          "tags": ["active"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-dare-018",
+          "kind": "dare",
+          "template": "{player}, mów o sobie w trzeciej osobie do swojej następnej tury.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-019",
+          "kind": "dare",
+          "template": "{player}, pokaż, jak wyglądasz rano przed pierwszą kawą.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-020",
+          "kind": "dare",
+          "template": "{player}, przedstaw osobę: {playerLeft} jak gwiazdę telewizyjnego show.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-021",
+          "kind": "dare",
+          "template": "{player}, wygłoś uroczystą mowę na cześć osoby: {randomPlayer}.",
+          "tags": ["group"],
+          "intensity": 1,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-022",
+          "kind": "dare",
+          "template": "{player}, zareklamuj wszystkim dowolny przedmiot ze stołu.",
+          "tags": ["funny"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-023",
+          "kind": "dare",
+          "template": "{player}, pozwól osobie: {randomPlayer} wymyślić Ci pseudonim na resztę gry.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-024",
+          "kind": "dare",
+          "template": "{player}, zrób dziwną minę, a {randomPlayer} ma ją dokładnie powtórzyć.",
+          "tags": ["group"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-025",
+          "kind": "dare",
+          "template": "{player}, stój na jednej nodze przez 20 sekund.",
+          "tags": ["active"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-026",
+          "kind": "dare",
+          "template": "{player}, odegraj scenę z dowolnego filmu, a reszta zgaduje tytuł.",
+          "tags": ["active"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-027",
+          "kind": "dare",
+          "template": "{player}, podaj dwie prawdy i jedno kłamstwo o sobie, a reszta zgaduje.",
+          "tags": ["personal"],
+          "intensity": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-028",
+          "kind": "dare",
+          "template": "{player}, zaśpiewaj przepis na jajecznicę jak operową arię.",
+          "tags": ["music"],
+          "intensity": 2,
+          "penaltyShots": 2
+        },
+        {
+          "id": "tod-klasyczna-dare-029",
+          "kind": "dare",
+          "template": "{player}, pozwól osobie: {playerRight} ułożyć Ci fryzurę.",
+          "tags": ["group"],
+          "intensity": 2,
+          "penaltyShots": 1
+        },
+        {
+          "id": "tod-klasyczna-dare-030",
+          "kind": "dare",
+          "template": "{player}, opowiedz w pięciu zdaniach, jak {randomPlayer} zdobywa supermoce.",
+          "tags": ["group"],
+          "intensity": 1
+        }
+      ]
+    }
+  ]
+}

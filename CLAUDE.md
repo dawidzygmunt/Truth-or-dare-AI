@@ -24,7 +24,7 @@ pnpm dev                              # web + api równolegle
 pnpm test                             # wszystkie testy unit/integration
 pnpm --filter game-engine test:watch  # TDD na silniku gier
 pnpm --filter api test                # testy api (wymaga Dockera dla Testcontainers)
-pnpm test:e2e                         # Playwright (buduje web i odpala api)
+pnpm test:e2e                         # Playwright (wymaga Dockera: baza tod-e2e na 55432, buduje web i odpala api)
 pnpm lint && pnpm typecheck           # przed każdym commitem
 pnpm --filter api prisma migrate dev  # nowa migracja
 pnpm --filter api db:seed             # seed gier, edycji i kart
@@ -65,6 +65,7 @@ Zasady testów:
 - Commity: Conventional Commits (`feat(game-engine): …`, `fix(api): …`), krótkie (jedna linia tytułu, body tylko gdy naprawdę potrzebne).
 - Bez stopek o współautorstwie AI (`Co-Authored-By: Claude…`, „Generated with Claude Code” itp.) w commitach i PR-ach.
 - Git: remote `origin` = `git@github.com:dawidzygmunt/Truth-or-dare-AI.git`. Każdy feature/krok na osobnym branchu (`feat/…`, `chore/…`, `fix/…`) od `main`; push brancha i PR do `main`. Nie commituj bezpośrednio na `main`.
+- Bez `gh` CLI (za szerokie uprawnienia). PR otwiera użytkownik: po pushu podaj link `https://github.com/dawidzygmunt/Truth-or-dare-AI/compare/main...<branch>?expand=1` oraz gotowy tytuł i opis PR.
 - Nazwy plików: `kebab-case.ts`; use case: `start-session.use-case.ts`; port: `card-repository.port.ts`.
 - Błędy domenowe jako klasy (`EditionLockedError`), mapowane na HTTP w warstwie presentation.
 - Bez `any`. Bez `// @ts-ignore` bez komentarza z uzasadnieniem.

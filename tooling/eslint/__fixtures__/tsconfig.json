@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "paths": { "@tod/contracts": ["./packages/contracts/src/index.ts"] }
+  }
+}
