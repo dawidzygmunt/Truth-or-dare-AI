@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Card } from '../../core/deck.js';
 import {
+  ActionNotAllowedError,
   DuplicatePlayerNameError,
   EmptyPlayerNameError,
   MissingCardKindError,
@@ -74,6 +75,14 @@ function cardsWithPenalty(penaltyShots: Card['penaltyShots']): Card[] {
     { id: 't', kind: 'truth', template: 'prawda', penaltyShots },
     { id: 'd', kind: 'dare', template: 'wyzwanie', penaltyShots },
   ];
+}
+
+function deepFreeze<T>(value: T): T {
+  if (typeof value === 'object' && value !== null) {
+    Object.values(value).forEach(deepFreeze);
+    Object.freeze(value);
+  }
+  return value;
 }
 
 describe('setupTruthOrDare', () => {
@@ -303,5 +312,71 @@ describe('fail', () => {
     expect(Object.keys(afterFails).sort()).toEqual(Object.keys(start).sort());
     expect(afterFails.queue).toEqual({ players: start.queue.players, nextIndex: 0 });
     expect(selectPenalty(afterFails)).toBeNull();
+  });
+});
+
+describe('disallowed actions', () => {
+  const awaitingTurn: TruthOrDareAction['type'][] = [];
+  const choosing: TruthOrDareAction['type'][] = ['nextTurn'];
+  const cardDrawn: TruthOrDareAction['type'][] = ['nextTurn', 'chooseTruth'];
+  const afterComplete: TruthOrDareAction['type'][] = [...cardDrawn, 'complete'];
+  const afterFail: TruthOrDareAction['type'][] = [...cardDrawn, 'fail'];
+
+  it.each<[string, TruthOrDareAction['type'][], TruthOrDareAction['type']]>([
+    ['before the first turn', awaitingTurn, 'chooseTruth'],
+    ['before the first turn', awaitingTurn, 'chooseDare'],
+    ['before the first turn', awaitingTurn, 'complete'],
+    ['before the first turn', awaitingTurn, 'fail'],
+    ['while choosing', choosing, 'nextTurn'],
+    ['while choosing', choosing, 'complete'],
+    ['while choosing', choosing, 'fail'],
+    ['with a card drawn', cardDrawn, 'nextTurn'],
+    ['with a card drawn', cardDrawn, 'chooseTruth'],
+    ['with a card drawn', cardDrawn, 'chooseDare'],
+    ['after complete', afterComplete, 'complete'],
+    ['after complete', afterComplete, 'fail'],
+    ['after complete', afterComplete, 'chooseDare'],
+    ['after fail', afterFail, 'fail'],
+    ['after fail', afterFail, 'complete'],
+  ])('%s: %j then %s returns a domain error', (_label, path, type) => {
+    const reduce = reducer();
+    const state = deepFreeze(play(reduce, setup({ cards: cardsWithPenalty(2) }), ...path));
+    const snapshot = structuredClone(state);
+
+    const result = reduce(state, { type });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toBeInstanceOf(ActionNotAllowedError);
+    expect(!result.ok && result.error).toMatchObject({ action: type, phase: state.phase });
+    expect(state).toEqual(snapshot);
+  });
+});
+
+describe('allowed actions', () => {
+  it('do not mutate the previous state', () => {
+    const reduce = reducer();
+    let state = deepFreeze(setup());
+
+    for (const type of ['nextTurn', 'chooseTruth', 'fail', 'nextTurn', 'chooseDare'] as const) {
+      state = deepFreeze(play(reduce, state, type));
+    }
+
+    expect(selectPhase(state)).toBe('cardDrawn');
+  });
+});
+
+describe('a deck missing a kind, as in a tampered persisted state', () => {
+  it('returns a domain error from choose instead of throwing', () => {
+    const reduce = reducer();
+    const state = play(reduce, setup(), 'nextTurn');
+    const tampered: TruthOrDareState = {
+      ...state,
+      deck: { ...state.deck, truth: { cards: [], nextIndex: 0 } },
+    };
+
+    const result = reduce(tampered, { type: 'chooseTruth' });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toBeInstanceOf(MissingCardKindError);
   });
 });
