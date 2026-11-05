@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { EDITION_SLUG, confirmAge } from './helpers/app.js';
+import {
+  EDITION_SLUG,
+  PLAYERS,
+  confirmAge,
+  expectCurrentPlayer,
+  openAsGuest,
+  startGame,
+} from './helpers/app.js';
 
 test.describe('age gate', () => {
   test('first launch asks for age and keeps the catalog hidden', async ({ page }) => {
@@ -47,5 +54,36 @@ test.describe('age gate', () => {
 
     await expect(page.getByTestId('age-gate-confirm')).toBeVisible();
     await expect(page.getByTestId('current-player')).toBeHidden();
+  });
+
+  test('a deep link to setup does not bypass the gate and works after confirming', async ({
+    page,
+  }) => {
+    await page.goto(`/setup/${EDITION_SLUG}`);
+
+    await expect(page.getByTestId('age-gate-confirm')).toBeVisible();
+    await expect(page.getByTestId('player-name-input')).toBeHidden();
+
+    await page.getByTestId('age-gate-confirm').click();
+
+    await expect(page.getByTestId('player-name-input')).toBeVisible();
+    await expect(page.getByTestId('start-game')).toBeEnabled();
+  });
+
+  test('a stored game stays behind the gate and comes back after confirming', async ({ page }) => {
+    await openAsGuest(page);
+    await startGame(page);
+    await page.evaluate(() => {
+      localStorage.clear();
+    });
+
+    await page.goto('/game');
+
+    await expect(page.getByTestId('age-gate-confirm')).toBeVisible();
+    await expect(page.getByTestId('current-player')).toBeHidden();
+
+    await page.getByTestId('age-gate-confirm').click();
+
+    await expectCurrentPlayer(page, PLAYERS[0]);
   });
 });
