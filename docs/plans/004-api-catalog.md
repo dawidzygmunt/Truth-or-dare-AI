@@ -107,3 +107,15 @@ Istniejący `test/health.e2e.test.ts` zostaje bez zmian i ma przechodzić bez ba
 - CI bez zmian: `postinstall` generuje klienta, a `ubuntu-latest` ma Dockera dla Testcontainers. Playwright nie potrzebuje bazy, dopóki UI nie korzysta z katalogu.
 - Test zawartości seeda sprawdza dodatkowo unikalność szablonów, obecność `{player}` na każdej karcie i brak poleceń picia w treści (kara należy do trybu `shots`).
 - Treści kart unikają form rodzajowych i odmiany imion, np. „osoba: {randomPlayer}”, bo imiona podstawiane są w mianowniku.
+
+## Poprawki po review
+
+- Seed: edycje tej gry, których nie ma w pliku, dostają `isPublished: false` (bez usuwania), a karty innych edycji i gier zostają nietknięte (testy integracyjne). Schemat seeda: `z.strictObject`, `cards.min(1)` dla opublikowanych edycji, unikalne `id` kart w całej grze (`id` to globalny klucz główny), odrzucanie zbłąkanych `{` i `}`, `productId` wymagany dla płatnej edycji, slug edycji przez `SlugSchema`.
+- `SlugSchema` (`^[a-z0-9-]+$`) w `contracts`. `GetEditionDeck` traktuje slug spoza wzorca jak `EditionNotFoundError` (404), zanim zapyta repozytorium. Wcześniej `GET /editions/%00/deck` kończyło się 500, bo Postgres odrzuca bajt NUL. Sprawdzenie jest w use case, żeby kontroler nadal tylko wywoływał use case.
+- `PrismaService`: `connectionTimeoutMillis: 5000`, żeby żądanie do niedziałającej bazy nie wisiało.
+- `isEditionLocked` zamyka dostęp domyślnie (`tier !== 'free'`), więc nowy tier jest zablokowany, dopóki nie zostanie obsłużony.
+- ESLint: `application` nie importuje `@nestjs/*`, `@prisma/*` ani `stripe` (żaden taki import nie istniał). `presentation` nie importuje `infrastructure`, `src/database` ani `src/generated`. Nowe elementy `api-database` i `api-generated` są dopisane do reguł `application` i `web`, żeby nic nie poluzować. `catalog.module.ts` leży poza warstwami, więc nadal wiąże porty z implementacjami.
+- Migracja `add_check_constraints`: CHECK na `intensity` (1-5, `Edition` i `Card`) oraz `penaltyShots` (null lub > 0). Prisma nie modeluje CHECK, więc `schema.prisma` bez zmian; `prisma migrate dev` na tymczasowym Postgresie raportuje „Already in sync”.
+- Test talii porównuje z liczbą kart z JSON zamiast stałej 60, bo stała powielała dane i zmiana treści łamałaby poprawny endpoint. Test słów o piciu obejmuje odmiany, ale pozostaje heurystyką: treści nadal wymagają przeglądu przez człowieka.
+- Treści: dare-025 z limitem 20 sekund, dare-009 i dare-013 bez „rundy”, dare-030 bez formy rodzajowej, truth-005 i truth-012 przeredagowane. Id kart bez zmian.
+- Poza zakresem (czeka na deployment): fail-fast dla `DATABASE_URL`, `postinstall` i `prisma` w zależnościach produkcyjnych.

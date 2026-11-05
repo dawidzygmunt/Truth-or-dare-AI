@@ -14,7 +14,10 @@ export interface Edition {
   isPublished: boolean;
 }
 
-/** Until entitlements exist (phase 2), every paid edition is locked for everyone. */
+/**
+ * Until entitlements exist (phase 2), every paid edition is locked for everyone. Fails closed:
+ * only a known free tier is open, so a tier added later stays locked until it is handled here.
+ */
 export function isEditionLocked(edition: Pick<Edition, 'tier'>): boolean {
-  return edition.tier === 'paid';
+  return edition.tier !== 'free';
 }

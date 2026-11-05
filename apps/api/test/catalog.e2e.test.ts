@@ -17,6 +17,10 @@ import {
 } from './support/test-database.js';
 
 const FREE_SLUG = 'truth-or-dare-klasyczna';
+const seededGame = SeedGameSchema.parse(truthOrDare);
+const seededFreeCardIds = (seededGame.editions.find(({ slug }) => slug === FREE_SLUG)?.cards ?? [])
+  .map(({ id }) => id)
+  .sort();
 const PAID_CARD_ID = 'paid-card-id-sentinel';
 const PAID_CARD_TEMPLATE = '{player}, paid card content sentinel';
 const DRAFT_CARD_TEMPLATE = '{player}, draft card content sentinel';
@@ -29,7 +33,7 @@ describe('catalog api', () => {
     database = await startTestDatabase();
     process.env.DATABASE_URL = database.url;
 
-    await seedGame(database.prisma, SeedGameSchema.parse(truthOrDare));
+    await seedGame(database.prisma, seededGame);
 
     const paid = anEdition({ slug: 'paid-edition', name: 'Spicy', tier: 'paid' });
     const draft = anEdition({ slug: 'draft-edition', name: 'Draft', isPublished: false });
@@ -92,7 +96,9 @@ describe('catalog api', () => {
       const deck = DeckResponseSchema.parse(response.body);
 
       expect(deck.editionSlug).toBe(FREE_SLUG);
-      expect(deck.cards).toHaveLength(60);
+      expect(seededFreeCardIds.length).toBeGreaterThan(0);
+      expect(deck.cards).toHaveLength(seededFreeCardIds.length);
+      expect(deck.cards.map(({ id }) => id).sort()).toEqual(seededFreeCardIds);
     });
 
     it('exposes only the agreed card fields', async () => {
@@ -118,6 +124,16 @@ describe('catalog api', () => {
 
     it('answers 404 for an unknown edition', async () => {
       await request(app.getHttpServer()).get('/editions/nope/deck').expect(404);
+    });
+
+    it.each([
+      ['a NUL byte', '%00'],
+      ['upper case letters', 'Klasyczna'],
+      ['a space', 'two%20words'],
+      ['an encoded slash', 'a%2Fb'],
+      ['an encoded dot segment', '%2E%2E'],
+    ])('answers 404, not 500, for a slug with %s', async (_, slug) => {
+      await request(app.getHttpServer()).get(`/editions/${slug}/deck`).expect(404);
     });
 
     it('answers 404 for an unpublished edition', async () => {

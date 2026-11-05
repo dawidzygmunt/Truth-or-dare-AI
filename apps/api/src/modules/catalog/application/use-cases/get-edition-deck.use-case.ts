@@ -1,3 +1,4 @@
+import { SlugSchema } from '@tod/contracts';
 import type { Card } from '../../domain/card.js';
 import { EditionLockedError } from '../../domain/edition-locked.error.js';
 import { EditionNotFoundError } from '../../domain/edition-not-found.error.js';
@@ -15,6 +16,9 @@ export class GetEditionDeck {
   constructor(private readonly editions: EditionRepository) {}
 
   async execute(slug: string): Promise<EditionDeck> {
+    // A slug that no edition can have never reaches the database (Postgres rejects e.g. NUL bytes).
+    if (!SlugSchema.safeParse(slug).success) throw new EditionNotFoundError(slug);
+
     const edition = await this.editions.findPublishedBySlug(slug);
     if (!edition) throw new EditionNotFoundError(slug);
     // Must stay before the card lookup: locked content never leaves the database.

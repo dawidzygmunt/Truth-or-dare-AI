@@ -46,7 +46,7 @@
         {
           "id": "tod-klasyczna-truth-005",
           "kind": "truth",
-          "template": "{player}, jaki jest najgorszy prezent w Twoim życiu?",
+          "template": "{player}, jaki jest najgorszy prezent, jaki Ci się trafił?",
           "tags": ["funny"],
           "intensity": 1
         },
@@ -98,7 +98,7 @@
         {
           "id": "tod-klasyczna-truth-012",
           "kind": "truth",
-          "template": "{player}, z kim z tego stołu najchętniej lecisz na bezludną wyspę?",
+          "template": "{player}, kogo spośród osób przy stole zabierasz na bezludną wyspę?",
           "tags": ["group"],
           "intensity": 1
         },
@@ -297,7 +297,7 @@
         {
           "id": "tod-klasyczna-dare-009",
           "kind": "dare",
-          "template": "{player}, zamień się miejscami z osobą: {playerRight} do końca tej rundy.",
+          "template": "{player}, zamień się miejscami z osobą: {playerRight} do swojej następnej tury.",
           "tags": ["group"],
           "intensity": 1
         },
@@ -326,7 +326,7 @@
         {
           "id": "tod-klasyczna-dare-013",
           "kind": "dare",
-          "template": "{player}, poruszaj się i mów jak robot do końca tej rundy.",
+          "template": "{player}, poruszaj się i mów jak robot do swojej następnej tury.",
           "tags": ["active"],
           "intensity": 1,
           "penaltyShots": 1
@@ -414,7 +414,7 @@
         {
           "id": "tod-klasyczna-dare-025",
           "kind": "dare",
-          "template": "{player}, stój na jednej nodze do swojej następnej tury.",
+          "template": "{player}, stój na jednej nodze przez 20 sekund.",
           "tags": ["active"],
           "intensity": 2,
           "penaltyShots": 1
@@ -452,7 +452,7 @@
         {
           "id": "tod-klasyczna-dare-030",
           "kind": "dare",
-          "template": "{player}, opowiedz w pięciu zdaniach, jak {randomPlayer} zostaje superbohaterem.",
+          "template": "{player}, opowiedz w pięciu zdaniach, jak {randomPlayer} zdobywa supermoce.",
           "tags": ["group"],
           "intensity": 1
         }
