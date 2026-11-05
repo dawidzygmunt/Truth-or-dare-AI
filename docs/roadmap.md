@@ -42,11 +42,11 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [x] T5.4 Ekran gry
 - [x] T5.5 PWA: ikony, cache katalogu i darmowej talii, instrukcja instalacji na iOS
 
-### Krok 6: E2E (S, fala 3, po kroku 5)
-- [ ] T6.1 Gość: age gate → 3 graczy → 5 tur
-- [ ] T6.2 Odświeżenie strony przywraca stan
-- [ ] T6.3 Tryby `shots` i `none`
-- [ ] T6.4 Offline po pierwszym załadowaniu
+### Krok 6: E2E (S, fala 3, `006`, branch `feat/e2e-flows`)
+- [x] T6.1 Gość: age gate → 3 graczy → 5 tur
+- [x] T6.2 Odświeżenie strony przywraca stan
+- [x] T6.3 Tryby `shots` i `none`
+- [x] T6.4 Offline po pierwszym załadowaniu
 
 ## Faza 2: kolejne gry i treści
 
@@ -63,7 +63,7 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [ ] T8.2 `identity`: Google OAuth, ciasteczka, refresh, `/auth/logout`, `/me` (O)
 - [ ] T8.3 `billing`: `Purchase`, `Entitlement`, port `PaymentProvider` (O)
 - [ ] T8.4 `billing`: Stripe Checkout, idempotentny webhook (O)
-- [ ] T8.5 `catalog`: `EntitlementChecker`, flaga `locked`, talia płatna po uprawnieniach (O)
+- [ ] T8.5 `catalog`: `EntitlementChecker`, flaga `locked`, talia płatna po uprawnieniach (O). Warunek: service worker nie może polegać na zapisanym katalogu przy decyzji o cache'u talii (znacznik tier w odpowiedzi albo świeży katalog), inaczej nieaktualny `free` wpuści płatną talię do `tod-free-decks`
 - [ ] T8.6 Web: logowanie, ekran zakupu, odświeżenie `/me`, płatne talie w IndexedDB (O)
 - [ ] T8.7 Pierwsza płatna edycja „Spicy” i produkty, w tym all access (S)
 - [ ] T8.8 Playwright: płatna edycja dla gościa, zakup z webhookiem (S)
