@@ -294,6 +294,29 @@ describe('truth-or-dare seed data', () => {
     expect(templates).toContain('{playerRight}');
   });
 
+  it('does not end a dare with "the round", which the game does not have', () => {
+    expect(cards.filter(({ template }) => /rund/iu.test(template))).toEqual([]);
+  });
+
+  it('puts a number on every dare that asks to hold a position', () => {
+    const holding = /stój|stań|wytrzymaj|trzymaj/iu;
+
+    expect(cards.filter(({ template }) => holding.test(template) && !/\d/.test(template))).toEqual(
+      [],
+    );
+  });
+
+  it.each([
+    ['tod-klasyczna-truth-005', '{player}'],
+    ['tod-klasyczna-truth-012', '{player}'],
+    ['tod-klasyczna-dare-009', '{playerRight}'],
+    ['tod-klasyczna-dare-013', '{player}'],
+    ['tod-klasyczna-dare-025', '{player}'],
+    ['tod-klasyczna-dare-030', '{randomPlayer}'],
+  ])('keeps reviewed card %s and its %s placeholder', (id, placeholder) => {
+    expect(cards.find((card) => card.id === id)?.template).toContain(placeholder);
+  });
+
   it('uses none of the drinking words listed above: penalties belong to the penalty mode', () => {
     expect(cards.filter(({ template }) => mentionsDrinking(template))).toEqual([]);
   });
