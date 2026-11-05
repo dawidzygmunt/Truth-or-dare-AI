@@ -46,6 +46,26 @@ describe('shuffle', () => {
     const input = Object.freeze([...items]);
     expect(() => shuffle(input, createSeededRandom(1))).not.toThrow();
   });
+
+  it('produces every permutation of three items about equally often', () => {
+    const trials = 6000;
+    const expected = trials / 6;
+    // Binomial sigma is about 29, so 150 is over five sigma: wide enough for any fair shuffle,
+    // narrow enough to catch a biased or partly fixed one (a stuck first element gives 3000 or 0).
+    const tolerance = 150;
+    const random = createSeededRandom(1);
+    const counts = new Map<string, number>();
+
+    for (let trial = 0; trial < trials; trial++) {
+      const permutation = shuffle([0, 1, 2], random).join('');
+      counts.set(permutation, (counts.get(permutation) ?? 0) + 1);
+    }
+
+    expect([...counts.keys()].sort()).toEqual(['012', '021', '102', '120', '201', '210']);
+    for (const count of counts.values()) {
+      expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+    }
+  });
 });
 
 describe('drawCard', () => {
