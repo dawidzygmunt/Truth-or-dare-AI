@@ -65,7 +65,7 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [ ] T8.4 `billing`: Stripe Checkout, idempotentny webhook (O)
 - [ ] T8.5 `catalog`: `EntitlementChecker`, flaga `locked`, talia płatna po uprawnieniach (O). Warunek: service worker nie może polegać na zapisanym katalogu przy decyzji o cache'u talii (znacznik tier w odpowiedzi albo świeży katalog), inaczej nieaktualny `free` wpuści płatną talię do `tod-free-decks`
 - [ ] T8.6 Web: logowanie, ekran zakupu, odświeżenie `/me`, płatne talie w IndexedDB (O)
-- [ ] T8.7 Pierwsza płatna edycja „Spicy” i produkty, w tym all access (S)
+- [ ] T8.7 Pierwsza płatna edycja i produkty, w tym all access (S). Poziomy Ostre i Hardcore to edycje (D8). Przed publikacją paywalla sprawdzić, czy treść pokrywa obietnice z D7
 - [ ] T8.8 Playwright: płatna edycja dla gościa, zakup z webhookiem (S)
 
 ## Faza 4: Google Play
@@ -95,6 +95,9 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [?] D1 Czy „nigdy przenigdy” wchodzi do zakresu? Jest w `architecture.md`, nie ma w KICKOFF ani `CLAUDE.md`.
 - [?] D2 Hosting api i bazy (przed publikacją).
 - [?] D3 Potwierdzenie założeń z KICKOFF: tylko polski, jednorazowe zakupy + all access, logowanie Google + magic link.
+- [x] D6 Subskrypcje odłożone: na razie bez nich, wracamy do tematu przy fazie 3 (decyzja użytkownika, 2026-11-05). Ceny 19 zł / 96 zł z projektu SZOT nie są przyjęte.
+- [x] D7 Teksty paywalla z projektu SZOT zostają („2000+ kart, nowe co tydzień”, „zero reklam”). Muszą być prawdziwe w chwili publikacji paywalla, patrz T8.7.
+- [x] D8 Poziomy Łagodne / Ostre / Hardcore to edycje (`Edition`), bez zmiany modelu danych.
 - [?] D4 Literówki w `architecture.md`: „faza 5” w sekcji 12 powinna być fazą 4; sekcja 11 umieszcza `catalog` i age gate w fazie 2, a KICKOFF w fazie 1 (przyjęty KICKOFF).
 - [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone; §4 pokazuje reduktor zwracający stan, a silnik zwraca `Result` (plan 003).
 
