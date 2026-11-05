@@ -39,7 +39,7 @@ function fakeCaches() {
 
 function fakeNetwork(routes: Readonly<Record<string, Response | Error>>) {
   return vi.fn<typeof fetch>((input) => {
-    const route = routes[input.toString()];
+    const route = typeof input === 'string' ? routes[input] : undefined;
     if (route === undefined) return Promise.resolve(new Response(null, { status: 404 }));
     return route instanceof Error ? Promise.reject(route) : Promise.resolve(route.clone());
   });
