@@ -161,6 +161,85 @@ describe('SeedGameSchema', () => {
   });
 });
 
+// Polish drinking vocabulary as word prefixes, so inflections are caught (kieliszek, kieliszka,
+// kieliszkiem). "pij" also catches "pijany". The unicode lookbehind replaces \b, which does not
+// treat letters like "ó" or "ł" as word characters.
+const DRINKING_PREFIXES = [
+  'pij',
+  'pić',
+  'picie',
+  'wypij',
+  'wypić',
+  'upij',
+  'upić',
+  'napij',
+  'napić',
+  'popij',
+  'zapij',
+  'dopij',
+  'nalej',
+  'nalać',
+  'wychyl',
+  'kielisz',
+  'duszk',
+  'shot',
+  'drink',
+  'alkohol',
+  'wódk',
+  'browar',
+  'whisky',
+];
+// Short stems that would be too noisy as prefixes (winogrono, piwnica, wina = guilt).
+const DRINKING_WORDS = ['piw(?:o|a|u|em|ie)', 'win(?:o|em)'];
+const DRINKING = new RegExp(
+  String.raw`(?<!\p{L})(?:(?:${DRINKING_PREFIXES.join('|')})|(?:${DRINKING_WORDS.join('|')})(?!\p{L}))`,
+  'iu',
+);
+
+/**
+ * A heuristic over the word list above, not a proof: synonyms, slang and forms outside the list
+ * pass, so new cards still need a human check for the Google Play drinking rules.
+ */
+function mentionsDrinking(text: string): boolean {
+  return DRINKING.test(text);
+}
+
+describe('mentionsDrinking', () => {
+  it.each([
+    'Napij się.',
+    'Wypij łyk.',
+    'Pijemy razem.',
+    'Pić do dna.',
+    'Wypić kieliszek.',
+    'Weź kieliszka.',
+    'Z kieliszkiem w ręku.',
+    'Nalej sobie.',
+    'Nalać wszystkim.',
+    'Zamów piwo.',
+    'Polej piwem.',
+    'Kupił wino.',
+    'Pijesz z winem.',
+    'Zrób shota.',
+    'Wódka.',
+    'Duszkiem!',
+    'Pijany jak bela.',
+    'Zamów drinka.',
+  ])('detects a drinking word in "%s"', (text) => {
+    expect(mentionsDrinking(text)).toBe(true);
+  });
+
+  it.each([
+    'Czyja to wina?',
+    'Zejdź do piwnicy.',
+    'Policz do pięciu.',
+    'Opowiedz o pilocie.',
+    'Narysuj piękny obraz.',
+    'Zrób piruet.',
+  ])('does not flag "%s"', (text) => {
+    expect(mentionsDrinking(text)).toBe(false);
+  });
+});
+
 describe('truth-or-dare seed data', () => {
   const game = SeedGameSchema.parse(truthOrDare);
   const edition = game.editions.find(({ name }) => name === 'Klasyczna');
@@ -215,9 +294,7 @@ describe('truth-or-dare seed data', () => {
     expect(templates).toContain('{playerRight}');
   });
 
-  it('never tells anyone to drink: penalties belong to the penalty mode', () => {
-    const drinking = /\b(pij|wypij|upij|shot|kieliszek|duszkiem|alkohol|wódk|piw[oa])/iu;
-
-    expect(cards.filter(({ template }) => drinking.test(template))).toEqual([]);
+  it('uses none of the drinking words listed above: penalties belong to the penalty mode', () => {
+    expect(cards.filter(({ template }) => mentionsDrinking(template))).toEqual([]);
   });
 });
