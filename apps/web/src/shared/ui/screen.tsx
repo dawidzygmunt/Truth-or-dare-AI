@@ -10,10 +10,19 @@ interface ScreenProps {
   readonly action?: ReactNode;
 }
 
+const safeAreaPadding = [
+  'pt-[max(1.5rem,env(safe-area-inset-top))]',
+  'pr-[max(1.5rem,env(safe-area-inset-right))]',
+  'pb-[max(1.5rem,env(safe-area-inset-bottom))]',
+  'pl-[max(1.5rem,env(safe-area-inset-left))]',
+].join(' ');
+
+const frameClasses = `mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 ${safeAreaPadding}`;
+
 /** Page frame: every screen has one `main` and one `h1`. */
 export function Screen({ title, children, titleTestId, titleRef, action }: ScreenProps) {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 p-6">
+    <main className={frameClasses}>
       <header className="flex items-start justify-between gap-4">
         <h1
           ref={titleRef}

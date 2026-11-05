@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { pl } from '../../i18n/pl.js';
 import { useCatalogQuery } from '../../shared/api/queries.js';
 import { ApiErrorMessage } from '../../shared/ui/api-error-message.js';
-import { buttonClasses } from '../../shared/ui/button.js';
+import { buttonClasses, textActionClasses } from '../../shared/ui/button.js';
 import { LoadingMessage } from '../../shared/ui/loading-message.js';
 import { Screen } from '../../shared/ui/screen.js';
 import { useGameStore } from '../truth-or-dare/game-store-context.js';
@@ -84,7 +84,7 @@ export function CatalogScreen() {
         </Link>
       )}
       <CatalogContent />
-      <Link data-testid="install-link" className="text-center underline" to="/install">
+      <Link data-testid="install-link" className={textActionClasses} to="/install">
         {pl.catalog.install}
       </Link>
     </Screen>

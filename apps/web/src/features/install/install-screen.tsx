@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { pl } from '../../i18n/pl.js';
+import { textActionClasses } from '../../shared/ui/button.js';
 import { Screen } from '../../shared/ui/screen.js';
 
 export function InstallScreen() {
@@ -10,7 +11,7 @@ export function InstallScreen() {
           <li key={step}>{step}</li>
         ))}
       </ol>
-      <Link data-testid="back-link" className="text-center underline" to="/">
+      <Link data-testid="back-link" className={textActionClasses} to="/">
         {pl.common.back}
       </Link>
     </Screen>

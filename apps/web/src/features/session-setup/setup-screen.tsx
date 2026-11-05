@@ -1,5 +1,5 @@
 import type { PenaltyMode } from '@tod/game-engine';
-import { useState, type SyntheticEvent } from 'react';
+import { useRef, useState, type SyntheticEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { pl } from '../../i18n/pl.js';
 import { useDeckQuery } from '../../shared/api/queries.js';
@@ -28,6 +28,7 @@ export function SetupScreen() {
   const [penaltyMode, setPenaltyMode] = useState<PenaltyMode>('none');
   const [setupError, setSetupError] = useState<GameSetupErrorCode | null>(null);
   const [confirmingReplace, setConfirmingReplace] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const addPlayer = (event: SyntheticEvent) => {
     event.preventDefault();
@@ -37,6 +38,8 @@ export function SetupScreen() {
     setPlayers([...players, draft]);
     setDraft('');
     setSetupError(null);
+    // Tapping the button took focus away, which closes the keyboard between players.
+    nameInputRef.current?.focus();
   };
 
   const removePlayer = (index: number) => {
@@ -62,6 +65,7 @@ export function SetupScreen() {
         <label className="flex flex-col gap-1">
           <span>{pl.setup.playerName}</span>
           <input
+            ref={nameInputRef}
             data-testid="player-name-input"
             className="min-h-12 rounded-xl border border-neutral-600 bg-transparent px-4 text-lg"
             autoComplete="off"

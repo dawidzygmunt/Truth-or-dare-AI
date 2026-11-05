@@ -5,7 +5,7 @@ import {
   selectPenalty,
   selectPhase,
 } from '@tod/game-engine';
-import { useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { pl } from '../../i18n/pl.js';
 import { Button, textActionClasses } from '../../shared/ui/button.js';
@@ -14,7 +14,26 @@ import { LoadingMessage } from '../../shared/ui/loading-message.js';
 import { Screen } from '../../shared/ui/screen.js';
 import { useGameStore } from './game-store-context.js';
 
-function TurnControls({ game }: { readonly game: TruthOrDareState }) {
+/** What a screen reader says after a move. The screen shows the same through its layout. */
+function announcement(game: TruthOrDareState): string {
+  const card = selectCurrentCard(game);
+  const penalty = selectPenalty(game);
+  const player = selectCurrentPlayer(game);
+  if (card !== null) {
+    return pl.game.announceCard(card.kind === 'truth' ? pl.game.truth : pl.game.dare, card.text);
+  }
+  if (penalty !== null) {
+    return pl.game.penalty(penalty.player, penalty.shots);
+  }
+  return player === null ? '' : pl.game.announceTurn(player);
+}
+
+interface TurnControlsProps {
+  readonly game: TruthOrDareState;
+  readonly cardRef: RefObject<HTMLElement | null>;
+}
+
+function TurnControls({ game, cardRef }: TurnControlsProps) {
   const dispatch = useGameStore((state) => state.dispatch);
   const card = selectCurrentCard(game);
   const penalty = selectPenalty(game);
@@ -45,7 +64,12 @@ function TurnControls({ game }: { readonly game: TruthOrDareState }) {
   if (card !== null) {
     return (
       <>
-        <section className="flex flex-col gap-2 rounded-xl border border-neutral-600 p-4">
+        <section
+          ref={cardRef}
+          tabIndex={-1}
+          data-testid="card"
+          className="flex flex-col gap-2 rounded-xl border border-neutral-600 p-4 outline-none"
+        >
           <p data-testid="card-kind" className="text-neutral-400">
             {card.kind === 'truth' ? pl.game.truth : pl.game.dare}
           </p>
@@ -100,6 +124,17 @@ export function GameScreen() {
   const reset = useGameStore((state) => state.reset);
   const navigate = useNavigate();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const phase = game?.phase;
+  const player = game?.currentPlayer;
+
+  // The buttons a player just used are gone after every move, which would drop focus to the body.
+  useEffect(() => {
+    if (!confirmingEnd) {
+      (cardRef.current ?? titleRef.current)?.focus();
+    }
+  }, [phase, player, confirmingEnd]);
 
   if (game === null) {
     return hydrated ? (
@@ -115,6 +150,7 @@ export function GameScreen() {
     <Screen
       title={selectCurrentPlayer(game) ?? pl.game.title}
       titleTestId="current-player"
+      titleRef={titleRef}
       action={
         !confirmingEnd && (
           <button
@@ -130,6 +166,9 @@ export function GameScreen() {
         )
       }
     >
+      <p data-testid="game-announcer" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement(game)}
+      </p>
       {error !== null && (
         <p role="alert" data-testid="game-error" className="text-red-400">
           {pl.gameErrors[error]}
@@ -153,7 +192,7 @@ export function GameScreen() {
         />
       ) : (
         <div data-testid="turn-actions" className="flex flex-col gap-6">
-          <TurnControls game={game} />
+          <TurnControls game={game} cardRef={cardRef} />
         </div>
       )}
     </Screen>

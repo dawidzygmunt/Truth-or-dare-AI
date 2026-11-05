@@ -116,6 +116,99 @@ describe('GameScreen', () => {
     expect(screen.getByRole('heading', { level: 1, name: pl.catalog.title })).toBeVisible();
   });
 
+  describe('focus', () => {
+    it('starts on the player whose turn it is', async () => {
+      renderGame();
+
+      expect(await screen.findByTestId('current-player')).toHaveFocus();
+    });
+
+    it('moves to the card when one is drawn', async () => {
+      renderGame();
+      await screen.findByTestId('current-player');
+
+      await click(pl.game.truth);
+
+      expect(screen.getByTestId('card')).toHaveFocus();
+    });
+
+    it('moves to the next player after a card', async () => {
+      renderGame();
+      await screen.findByTestId('current-player');
+      await click(pl.game.truth);
+
+      await click(pl.game.done);
+
+      expect(screen.getByTestId('current-player')).toHaveFocus();
+    });
+
+    it('moves to the heading on a penalty and to the next player after it', async () => {
+      renderGame('shots');
+      await screen.findByTestId('current-player');
+      await click(pl.game.dare);
+
+      await click(pl.game.notDone);
+      expect(screen.getByTestId('current-player')).toHaveFocus();
+
+      await click(pl.game.next);
+      expect(screen.getByTestId('current-player')).toHaveFocus();
+    });
+
+    it('returns to the card after cancelling the end of the game', async () => {
+      renderGame();
+      await screen.findByTestId('current-player');
+      await click(pl.game.truth);
+
+      await userEvent.click(screen.getByTestId('end-game'));
+      await userEvent.click(screen.getByTestId('end-game-cancel'));
+
+      expect(screen.getByTestId('card')).toHaveFocus();
+    });
+  });
+
+  describe('announcements', () => {
+    const announcer = () => screen.getByTestId('game-announcer');
+
+    it('uses a polite live region that exists before anything changes', async () => {
+      renderGame();
+      await screen.findByTestId('current-player');
+
+      expect(announcer()).toHaveAttribute('aria-live', 'polite');
+      expect(announcer()).toHaveAttribute('aria-atomic', 'true');
+    });
+
+    it('announces whose turn it is', async () => {
+      renderGame();
+      await screen.findByTestId('current-player');
+      await click(pl.game.truth);
+
+      await click(pl.game.done);
+
+      expect(announcer()).toHaveTextContent(pl.game.announceTurn('Kuba'));
+    });
+
+    it('announces a new card with its kind', async () => {
+      const store = renderGame();
+      await screen.findByTestId('current-player');
+
+      await click(pl.game.dare);
+
+      const text = store.getState().game?.currentCard?.text ?? 'no card';
+      expect(announcer()).toHaveTextContent(pl.game.announceCard(pl.game.dare, text));
+    });
+
+    it('announces a penalty', async () => {
+      const store = renderGame('shots');
+      await screen.findByTestId('current-player');
+      await click(pl.game.dare);
+      const shots = store.getState().game?.currentCard?.penaltyShots ?? 0;
+
+      await click(pl.game.notDone);
+
+      expect(announcer()).toHaveTextContent(pl.game.penalty('Ola', shots));
+    });
+  });
+
   it('restores a game from storage after a reload', async () => {
     const storage = createMemoryStorage();
     const previous = createTestStore(storage);

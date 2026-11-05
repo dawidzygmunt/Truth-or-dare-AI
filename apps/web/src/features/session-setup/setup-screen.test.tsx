@@ -41,6 +41,15 @@ describe('SetupScreen', () => {
     expect(screen.getByLabelText(pl.setup.playerName)).toHaveValue('');
   });
 
+  it('returns focus to the name field, so the keyboard stays open', async () => {
+    stubApi({ [DECK]: { body: deckFixture } });
+    renderApp({ route: ROUTE });
+
+    await addPlayer('Ola');
+
+    expect(screen.getByLabelText(pl.setup.playerName)).toHaveFocus();
+  });
+
   it('adds a player with the enter key', async () => {
     stubApi({ [DECK]: { body: deckFixture } });
     renderApp({ route: ROUTE });

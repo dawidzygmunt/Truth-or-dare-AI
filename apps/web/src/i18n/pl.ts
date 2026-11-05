@@ -56,6 +56,8 @@ export const pl = {
       confirm: 'Tak, zakończ',
       cancel: 'Wróć do gry',
     },
+    announceTurn: (player: string) => `Kolej gracza: ${player}`,
+    announceCard: (kind: string, text: string) => `${kind}: ${text}`,
     penalty: (player: string, shots: number) =>
       `${player}: ${shots} ${plural(shots, { one: 'shot', few: 'shoty', many: 'shotów' })}`,
   },
