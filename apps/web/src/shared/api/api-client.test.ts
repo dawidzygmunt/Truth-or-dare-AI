@@ -1,6 +1,6 @@
 import type { CatalogResponse, DeckResponse } from '@tod/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { fetchCatalog, fetchDeck } from './api-client.js';
+import { fetchCatalog, fetchDeck, REQUEST_TIMEOUT_MS } from './api-client.js';
 import { ApiError } from './api-error.js';
 
 const catalog: CatalogResponse = {
@@ -66,6 +66,45 @@ describe('fetchCatalog', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn<typeof fetch>(() => Promise.reject(new TypeError('Failed to fetch'))),
+    );
+
+    expect(await apiErrorCode(fetchCatalog())).toBe('offline');
+  });
+});
+
+describe('request timeout', () => {
+  const timedOut = () => {
+    const signal = AbortSignal.abort(new DOMException('timed out', 'TimeoutError'));
+    return vi.spyOn(AbortSignal, 'timeout').mockReturnValue(signal);
+  };
+
+  it('gives every request a time limit', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
+    const fetchStub = respondWith(200, catalog);
+
+    await fetchCatalog();
+
+    expect(timeout).toHaveBeenCalledWith(REQUEST_TIMEOUT_MS);
+    expect(fetchStub.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('reports a request that hangs as offline', async () => {
+    timedOut();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>((_input, init) => Promise.reject(init?.signal?.reason as DOMException)),
+    );
+
+    expect(await apiErrorCode(fetchCatalog())).toBe('offline');
+  });
+
+  it('reports a body that hangs as offline, not as a broken response', async () => {
+    timedOut();
+    const response = new Response('{}');
+    vi.spyOn(response, 'json').mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() => Promise.resolve(response)),
     );
 
     expect(await apiErrorCode(fetchCatalog())).toBe('offline');
