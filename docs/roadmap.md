@@ -12,11 +12,11 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 ### Krok 1: szkielet repo
 - [x] T1.1 Monorepo, TS strict, ESLint z granicami, Vitest, Playwright, Docker, CI (`001`)
 
-### Krok 2: dokumentacja i agenci (S, fala 1)
-- [ ] T2.1 ADR 0001–0004 oraz 0005 (ESM, TypeScript 6)
-- [ ] T2.2 `docs/plans/_template.md`
-- [ ] T2.3 Subagenci `.claude/agents/planner.md` i `code-reviewer.md`
-- [ ] T2.4 `docs/design/README.md`
+### Krok 2: dokumentacja i agenci (S, fala 1, `002`)
+- [x] T2.1 ADR 0001–0004 oraz 0005 (ESM, TypeScript 6)
+- [x] T2.2 `docs/plans/_template.md`
+- [x] T2.3 Subagenci `.claude/agents/planner.md` i `code-reviewer.md`
+- [x] T2.4 `docs/design/README.md`
 
 ### Krok 3: `packages/game-engine` (O, fala 1)
 - [ ] T3.1 Port `Random`: seedowany i `crypto`
@@ -81,6 +81,7 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [?] D2 Hosting api i bazy (przed publikacją).
 - [?] D3 Potwierdzenie założeń z KICKOFF: tylko polski, jednorazowe zakupy + all access, logowanie Google + magic link.
 - [?] D4 Literówki w `architecture.md`: „faza 5” w sekcji 12 powinna być fazą 4; sekcja 11 umieszcza `catalog` i age gate w fazie 2, a KICKOFF w fazie 1 (przyjęty KICKOFF).
+- [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone.
 
 ## Kolejność pracy
 
