@@ -302,6 +302,10 @@ describe('fail', () => {
     [5, 5],
     [null, 1],
     [undefined, 1],
+    [0, 1],
+    [-2, 1],
+    [1.5, 1],
+    [Number.NaN, 1],
   ])('in shots mode turns a penaltyShots of %s into a penalty of %s', (penaltyShots, shots) => {
     const start = setup({ cards: cardsWithPenalty(penaltyShots), penaltyMode: 'shots' });
 

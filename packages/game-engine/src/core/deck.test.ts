@@ -164,4 +164,23 @@ describe('createDeck', () => {
 
     expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBe(2);
   });
+
+  // The contracts schema only allows a positive integer, so anything else is treated as "no
+  // penalty set" and falls back to the default of 1 shot.
+  it.each([0, -2, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 2 ** 53])(
+    'normalizes a penaltyShots of %s to null',
+    (penaltyShots) => {
+      const random = createSeededRandom(3);
+      const deck = createDeck([{ id: 'a', kind: 'truth', template: 'a', penaltyShots }], random);
+
+      expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBeNull();
+    },
+  );
+
+  it.each([1, 2, 5, 100])('keeps a positive integer penaltyShots of %s', (penaltyShots) => {
+    const random = createSeededRandom(3);
+    const deck = createDeck([{ id: 'a', kind: 'truth', template: 'a', penaltyShots }], random);
+
+    expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBe(penaltyShots);
+  });
 });

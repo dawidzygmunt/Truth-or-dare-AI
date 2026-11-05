@@ -43,12 +43,22 @@ export function shuffle<T>(items: readonly T[], random: Random): T[] {
   return shuffled;
 }
 
+/**
+ * Only a positive integer is a valid penalty, as in the contracts schema. Anything else
+ * (absent, 0, negative, fractional, NaN, infinite) becomes `null`, so the default applies.
+ */
+function normalizePenaltyShots(penaltyShots: number | null | undefined): number | null {
+  return typeof penaltyShots === 'number' && Number.isSafeInteger(penaltyShots) && penaltyShots > 0
+    ? penaltyShots
+    : null;
+}
+
 export function createDeck(cards: readonly Card[], random: Random): Deck {
   const normalized = cards.map(({ id, kind, template, penaltyShots }) => ({
     id,
     kind,
     template,
-    penaltyShots: penaltyShots ?? null,
+    penaltyShots: normalizePenaltyShots(penaltyShots),
   }));
   const pileOf = (kind: CardKind): Pile => ({
     cards: shuffle(
