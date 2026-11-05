@@ -26,14 +26,14 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [x] T3.5 Reduktor prawdy czy wyzwania, tryby kar, błędy domenowe
 - [x] T3.6 Serializowalność stanu
 
-### Krok 4: minimalne `apps/api` (O, fala 1)
-- [ ] T4.0 `pnpm test` na czystym checkoucie nie może wymagać `contracts/dist` (`ssr.resolve.conditions` w Vitest)
-- [ ] T4.1 Kontrakty `catalog` i talii w `packages/contracts`
-- [ ] T4.2 Prisma: `Game`, `Edition`, `Card`, migracja (usuwa zaślepkę `db:seed`)
-- [ ] T4.3 Domena i use case'y `ListCatalog`, `GetEditionDeck` (in-memory)
-- [ ] T4.4 `PrismaEditionRepository` (Testcontainers)
-- [ ] T4.5 Kontroler, `GET /catalog`, `GET /editions/:slug/deck`, `EditionLockedError` → 403
-- [ ] T4.6 Seed z JSON: edycja „Klasyczna”, ok. 30 prawd i 30 wyzwań
+### Krok 4: minimalne `apps/api` (O, fala 1, `004`, branch `feat/api-catalog`)
+- [x] T4.0 `pnpm test` na czystym checkoucie nie może wymagać `contracts/dist` (`ssr.resolve.conditions` w Vitest)
+- [x] T4.1 Kontrakty `catalog` i talii w `packages/contracts`
+- [x] T4.2 Prisma: `Game`, `Edition`, `Card`, migracja (usuwa zaślepkę `db:seed`)
+- [x] T4.3 Domena i use case'y `ListCatalog`, `GetEditionDeck` (in-memory)
+- [x] T4.4 `PrismaEditionRepository` (Testcontainers)
+- [x] T4.5 Kontroler, `GET /catalog`, `GET /editions/:slug/deck`, `EditionLockedError` → 403
+- [x] T4.6 Seed z JSON: edycja „Klasyczna”, ok. 30 prawd i 30 wyzwań
 
 ### Krok 5: `apps/web` (O, fala 2, po krokach 3 i 4)
 - [ ] T5.1 i18n, router, providery, age gate
