@@ -18,15 +18,16 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [x] T2.3 Subagenci `.claude/agents/planner.md` i `code-reviewer.md`
 - [x] T2.4 `docs/design/README.md`
 
-### Krok 3: `packages/game-engine` (O, fala 1)
-- [ ] T3.1 Port `Random`: seedowany i `crypto`
-- [ ] T3.2 Talia: tasowanie, dobieranie bez powtórzeń, reset danego rodzaju kart
-- [ ] T3.3 Gracze: walidacja i kolejka tur
-- [ ] T3.4 Szablony i placeholdery
-- [ ] T3.5 Reduktor prawdy czy wyzwania, tryby kar, błędy domenowe
-- [ ] T3.6 Serializowalność stanu
+### Krok 3: `packages/game-engine` (O, fala 1, `003`, branch `feat/game-engine`)
+- [x] T3.1 Port `Random`: seedowany i `crypto`
+- [x] T3.2 Talia: tasowanie, dobieranie bez powtórzeń, reset danego rodzaju kart
+- [x] T3.3 Gracze: walidacja i kolejka tur
+- [x] T3.4 Szablony i placeholdery
+- [x] T3.5 Reduktor prawdy czy wyzwania, tryby kar, błędy domenowe
+- [x] T3.6 Serializowalność stanu
 
 ### Krok 4: minimalne `apps/api` (O, fala 1)
+- [ ] T4.0 `pnpm test` na czystym checkoucie nie może wymagać `contracts/dist` (`ssr.resolve.conditions` w Vitest)
 - [ ] T4.1 Kontrakty `catalog` i talii w `packages/contracts`
 - [ ] T4.2 Prisma: `Game`, `Edition`, `Card`, migracja (usuwa zaślepkę `db:seed`)
 - [ ] T4.3 Domena i use case'y `ListCatalog`, `GetEditionDeck` (in-memory)
@@ -81,7 +82,7 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [?] D2 Hosting api i bazy (przed publikacją).
 - [?] D3 Potwierdzenie założeń z KICKOFF: tylko polski, jednorazowe zakupy + all access, logowanie Google + magic link.
 - [?] D4 Literówki w `architecture.md`: „faza 5” w sekcji 12 powinna być fazą 4; sekcja 11 umieszcza `catalog` i age gate w fazie 2, a KICKOFF w fazie 1 (przyjęty KICKOFF).
-- [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone.
+- [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone; §4 pokazuje reduktor zwracający stan, a silnik zwraca `Result` (plan 003).
 
 ## Kolejność pracy
 
