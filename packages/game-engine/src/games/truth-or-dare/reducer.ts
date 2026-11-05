@@ -6,11 +6,14 @@ import { err, ok, type Result } from '../../core/result.js';
 import { resolveTemplate } from '../../core/template.js';
 import type { TruthOrDareKind, TruthOrDareState } from './state.js';
 
+const DEFAULT_SHOTS = 1;
+
 export type TruthOrDareAction =
   | { readonly type: 'nextTurn' }
   | { readonly type: 'chooseTruth' }
   | { readonly type: 'chooseDare' }
-  | { readonly type: 'complete' };
+  | { readonly type: 'complete' }
+  | { readonly type: 'fail' };
 
 export type TruthOrDareActionError = MissingCardKindError;
 
@@ -65,6 +68,17 @@ function complete(state: TruthOrDareState): TruthOrDareResult {
   return ok({ ...state, phase: 'awaitingTurn', currentCard: null });
 }
 
+function fail(state: TruthOrDareState): TruthOrDareResult {
+  if (state.phase !== 'cardDrawn') {
+    return ok(state);
+  }
+  const penalty =
+    state.penaltyMode === 'shots'
+      ? { player: state.currentPlayer, shots: state.currentCard.penaltyShots ?? DEFAULT_SHOTS }
+      : null;
+  return ok({ ...state, phase: 'awaitingTurn', currentCard: null, penalty });
+}
+
 /** Creates the reducer. `Random` is bound here because game state must stay JSON-serializable. */
 export function createTruthOrDareReducer(random: Random): TruthOrDareReducer {
   return (state, action) => {
@@ -77,6 +91,8 @@ export function createTruthOrDareReducer(random: Random): TruthOrDareReducer {
         return choose(state, 'dare', random);
       case 'complete':
         return complete(state);
+      case 'fail':
+        return fail(state);
     }
   };
 }

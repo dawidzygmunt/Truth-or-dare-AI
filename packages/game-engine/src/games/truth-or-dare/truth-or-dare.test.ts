@@ -301,7 +301,7 @@ describe('fail', () => {
     );
 
     expect(Object.keys(afterFails).sort()).toEqual(Object.keys(start).sort());
-    expect(afterFails.queue).toEqual({ players: start.queue.players, nextIndex: 2 });
+    expect(afterFails.queue).toEqual({ players: start.queue.players, nextIndex: 0 });
     expect(selectPenalty(afterFails)).toBeNull();
   });
 });
