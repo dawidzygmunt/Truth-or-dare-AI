@@ -21,7 +21,12 @@ import {
   selectPhase,
   selectPlayers,
 } from './selectors.js';
-import { setupTruthOrDare, type TruthOrDareConfig, type TruthOrDareState } from './state.js';
+import {
+  setupTruthOrDare,
+  type Penalty,
+  type TruthOrDareConfig,
+  type TruthOrDareState,
+} from './state.js';
 
 const CARDS: readonly Card[] = [
   { id: 't1', kind: 'truth', template: '{player}: prawda 1' },
@@ -197,15 +202,59 @@ describe('truth or dare flow', () => {
     expect([...ids].sort()).toEqual(['t1', 't2']);
   });
 
-  it('keeps going after a kind is exhausted', () => {
+  it('keeps going after a kind is exhausted: every cycle serves each card exactly once', () => {
     const reduce = reducer();
     let state = setup();
+    const ids: (string | undefined)[] = [];
 
-    for (let turn = 0; turn < 9; turn++) {
-      state = play(reduce, state, 'nextTurn', 'chooseTruth', 'complete');
+    for (let turn = 0; turn < 6; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth');
+      ids.push(selectCurrentCard(state)?.id);
+      state = play(reduce, state, 'complete');
     }
 
     expect(selectPhase(state)).toBe('awaitingTurn');
+    for (const cycle of [ids.slice(0, 2), ids.slice(2, 4), ids.slice(4, 6)]) {
+      expect([...cycle].sort()).toEqual(['t1', 't2']);
+    }
+  });
+
+  it('reshuffles an exhausted kind into a new order and leaves the other kind alone', () => {
+    const reduce = reducer();
+    let state = setup({ cards: truthCards(10) });
+    const drawTruth = () => {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth');
+      const id = selectCurrentCard(state)?.id;
+      state = play(reduce, state, 'complete');
+      return id;
+    };
+
+    const first = Array.from({ length: 10 }, drawTruth);
+    const exhausted = state.deck;
+    const second = Array.from({ length: 10 }, drawTruth);
+
+    expect(exhausted.truth.nextIndex).toBe(10);
+    expect([...second].sort()).toEqual([...first].sort());
+    expect(second).not.toEqual(first);
+    // The new order is what the state holds, so a restored game keeps serving it.
+    expect(state.deck.truth.cards.map((card) => card.id)).toEqual(second);
+    expect(state.deck.truth.cards).not.toEqual(exhausted.truth.cards);
+    expect(state.deck.dare).toEqual(exhausted.dare);
+  });
+
+  it('starts the new cycle at the first card of the reshuffled pile', () => {
+    const reduce = reducer();
+    let state = setup({ cards: truthCards(3) });
+
+    for (let turn = 0; turn < 3; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth', 'complete');
+    }
+    expect(state.deck.truth.nextIndex).toBe(3);
+
+    state = play(reduce, state, 'nextTurn', 'chooseTruth');
+
+    expect(state.deck.truth.nextIndex).toBe(1);
+    expect(selectCurrentCard(state)?.id).toBe(state.deck.truth.cards[0]?.id);
   });
 
   it('ignores cards of kinds that do not belong to this game', () => {
@@ -297,18 +346,40 @@ describe('fail', () => {
     expect(selectPenalty(state)).toBeNull();
   });
 
-  it('never sums shots: a player failing again gets the penalty of the last card only', () => {
+  it('never sums shots: each failed card gives exactly the shots of that card', () => {
+    // Distinct powers of two, so no sum, maximum or carried-over value equals a single card's.
+    const cards: Card[] = [
+      { id: 't1', kind: 'truth', template: 'a', penaltyShots: 1 },
+      { id: 't2', kind: 'truth', template: 'b', penaltyShots: 2 },
+      { id: 't3', kind: 'truth', template: 'c', penaltyShots: 4 },
+      { id: 'd', kind: 'dare', template: 'd', penaltyShots: 8 },
+    ];
     const reduce = reducer();
-    const start = setup({
-      players: ['Ola', 'Kuba'],
-      cards: cardsWithPenalty(3),
-      penaltyMode: 'shots',
-    });
-    const turnOfBoth = ['nextTurn', 'chooseDare', 'fail'] as const;
+    let state = setup({ players: ['Ola', 'Kuba'], cards, penaltyMode: 'shots' });
+    const failed: { player: string | null; drawn: number | null | undefined }[] = [];
+    const penalties: (Penalty | null)[] = [];
 
-    const state = play(reduce, start, ...turnOfBoth, ...turnOfBoth, ...turnOfBoth);
+    // Six consecutive fails: every player fails three times in a row, across turns.
+    for (let turn = 0; turn < 6; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth');
+      failed.push({
+        player: selectCurrentPlayer(state),
+        drawn: selectCurrentCard(state)?.penaltyShots,
+      });
+      state = play(reduce, state, 'fail');
+      penalties.push(selectPenalty(state));
+    }
 
-    expect(selectPenalty(state)).toEqual({ player: 'Ola', shots: 3 });
+    expect(penalties).toEqual(failed.map(({ player, drawn }) => ({ player, shots: drawn })));
+    expect(failed.map(({ player }) => player)).toEqual([
+      'Ola',
+      'Kuba',
+      'Ola',
+      'Kuba',
+      'Ola',
+      'Kuba',
+    ]);
+    expect(new Set(penalties.map((penalty) => penalty?.shots))).toEqual(new Set([1, 2, 4]));
   });
 
   it('keeps no per-player tally anywhere in state', () => {
@@ -379,6 +450,19 @@ describe('allowed actions', () => {
     }
 
     expect(selectPhase(state)).toBe('cardDrawn');
+  });
+
+  it('do not mutate the previous state when a kind is reshuffled', () => {
+    const reduce = reducer();
+    // Two truths and four draws: the third draw exhausts the pile and reshuffles it.
+    let state = deepFreeze(setup());
+
+    for (let draw = 0; draw < 4; draw++) {
+      state = deepFreeze(play(reduce, state, 'nextTurn', 'chooseTruth', 'complete'));
+    }
+
+    expect(selectPhase(state)).toBe('awaitingTurn');
+    expect(state.deck.truth.nextIndex).toBe(2);
   });
 });
 
