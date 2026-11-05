@@ -1,6 +1,6 @@
 # 004: Minimalne api, moduł `catalog` (faza 1, krok 4)
 
-Status: w realizacji
+Status: zrealizowany
 
 ## Cel
 
@@ -51,7 +51,7 @@ packages/contracts/src/catalog/{catalog-response.schema.test.ts,deck-response.sc
 packages/contracts/src/index.ts
 apps/api/package.json, apps/api/prisma.config.ts, apps/api/vitest.config.ts, apps/api/tsconfig.json
 apps/api/prisma/schema.prisma, apps/api/prisma/migrations/*
-apps/api/prisma/seed/{truth-or-dare.json,seed-data.schema.ts,seed-data.test.ts,seed-catalog.ts,index.ts}
+apps/api/prisma/seed/{truth-or-dare.json,seed-data.schema.ts,seed-data.test.ts,seed-game.ts,index.ts}
 apps/api/src/database/{prisma.module.ts,prisma.service.ts}
 apps/api/src/modules/catalog/catalog.module.ts
 apps/api/src/modules/catalog/domain/{card.ts,edition.ts,game.ts,edition-locked.error.ts,edition-not-found.error.ts}
@@ -99,4 +99,11 @@ Istniejący `test/health.e2e.test.ts` zostaje bez zmian i ma przechodzić bez ba
 
 ## Odstępstwa od planu (po implementacji)
 
-(uzupełnione po zakończeniu)
+- Seed: plik `seed-game.ts` z funkcją `seedGame` zamiast `seed-catalog.ts`. Jeden plik JSON to jedna gra.
+- `apps/api/vitest.config.ts`: alias `@tod/contracts` na źródła. Vitest działa w środowisku serwerowym, które ignoruje `resolve.conditions`, więc `/health` e2e przechodził tylko po zbudowaniu `contracts`. Na świeżym klonie (i w CI, gdzie `test` jest przed `build`) `pnpm test` padał. Błąd istniał przed tym krokiem.
+- `PrismaService` to zwykła klasa tworzona przez `useFactory` w `PrismaModule`. Konstruktor dostaje connection string, więc testy i seed nie muszą ustawiać `process.env`.
+- `exactOptionalPropertyTypes` zostało włączone w api: nie koliduje z Prismą ani Nestem. Kod generowany ma `@ts-nocheck`.
+- `pnpm.ignoredBuiltDependencies`: `cpu-features`, `protobufjs`, `ssh2` (zależności Testcontainers, działają bez skryptów budowania). `onlyBuiltDependencies`: `@prisma/engines`, `prisma`, `esbuild`.
+- CI bez zmian: `postinstall` generuje klienta, a `ubuntu-latest` ma Dockera dla Testcontainers. Playwright nie potrzebuje bazy, dopóki UI nie korzysta z katalogu.
+- Test zawartości seeda sprawdza dodatkowo unikalność szablonów, obecność `{player}` na każdej karcie i brak poleceń picia w treści (kara należy do trybu `shots`).
+- Treści kart unikają form rodzajowych i odmiany imion, np. „osoba: {randomPlayer}”, bo imiona podstawiane są w mianowniku.
