@@ -85,6 +85,19 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+function restore(state: TruthOrDareState): TruthOrDareState {
+  return JSON.parse(JSON.stringify(state)) as TruthOrDareState;
+}
+
+function truthCards(count: number): Card[] {
+  const truths = Array.from({ length: count }, (_, i) => ({
+    id: `t${i}`,
+    kind: 'truth' as const,
+    template: `{player} i {randomPlayer}: prawda ${i}`,
+  }));
+  return [...truths, { id: 'd', kind: 'dare', template: 'wyzwanie' }];
+}
+
 describe('setupTruthOrDare', () => {
   it('starts waiting for the first turn', () => {
     const state = setup();
@@ -378,5 +391,96 @@ describe('a deck missing a kind, as in a tampered persisted state', () => {
 
     expect(result.ok).toBe(false);
     expect(!result.ok && result.error).toBeInstanceOf(MissingCardKindError);
+  });
+});
+
+describe('serialization', () => {
+  const fullTurn: TruthOrDareAction['type'][] = ['nextTurn', 'chooseTruth', 'fail'];
+
+  it('survives a JSON round trip unchanged in every phase', () => {
+    const reduce = reducer();
+    let state = setup({ cards: truthCards(2) });
+    expect(restore(state)).toStrictEqual(state);
+
+    for (const type of [...fullTurn, ...fullTurn, ...fullTurn, 'nextTurn'] as const) {
+      state = play(reduce, state, type);
+      expect(restore(state)).toStrictEqual(state);
+    }
+  });
+
+  it('survives a round trip of cards given with an explicit undefined penalty', () => {
+    const state = setup({ cards: cardsWithPenalty(undefined) });
+
+    expect(restore(state)).toStrictEqual(state);
+  });
+
+  it('a restored game plays exactly like the original from any point', () => {
+    const script: TruthOrDareAction['type'][] = Array.from(
+      { length: 12 },
+      (_, turn) =>
+        [
+          ['nextTurn', 'chooseTruth', 'fail'],
+          ['nextTurn', 'chooseDare', 'complete'],
+        ][turn % 2] as TruthOrDareAction['type'][],
+    ).flat();
+    const start = setup({ cards: truthCards(3) });
+
+    for (let cut = 0; cut <= script.length; cut++) {
+      const atCut = play(reducer(5), start, ...script.slice(0, cut));
+      const rest = script.slice(cut);
+
+      const original = play(reducer(9), atCut, ...rest);
+      const restored = play(reducer(9), restore(atCut), ...rest);
+
+      expect(restored).toStrictEqual(original);
+    }
+  });
+
+  it('keeps the deck position: the rest of a cycle does not depend on the Random used', () => {
+    const count = 10;
+    const cards = truthCards(count);
+    const drawRest = (start: TruthOrDareState, seed: number) => {
+      const reduce = reducer(seed);
+      let state = start;
+      const ids: (string | undefined)[] = [];
+      for (let turn = 4; turn < count; turn++) {
+        state = play(reduce, state, 'nextTurn', 'chooseTruth');
+        ids.push(selectCurrentCard(state)?.id);
+        state = play(reduce, state, 'complete');
+      }
+      return ids;
+    };
+
+    const reduce = reducer();
+    let state = setup({ cards });
+    const drawnBefore: (string | undefined)[] = [];
+    for (let turn = 0; turn < 4; turn++) {
+      state = play(reduce, state, 'nextTurn', 'chooseTruth');
+      drawnBefore.push(selectCurrentCard(state)?.id);
+      state = play(reduce, state, 'complete');
+    }
+
+    const rest = drawRest(restore(state), 11);
+
+    expect(rest).toEqual(drawRest(state, 22));
+    expect(new Set([...drawnBefore, ...rest]).size).toBe(count);
+  });
+
+  it('keeps the current player and the resolved card text', () => {
+    const state = play(reducer(), setup({ cards: truthCards(1) }), 'nextTurn', 'chooseTruth');
+
+    const restored = restore(state);
+
+    expect(selectCurrentPlayer(restored)).toBe('Ola');
+    expect(selectCurrentCard(restored)?.text).toBe(selectCurrentCard(state)?.text);
+  });
+
+  it('a card restored in the middle of a turn can still be failed', () => {
+    const start = setup({ cards: cardsWithPenalty(2), penaltyMode: 'shots' });
+    const state = play(reducer(), start, 'nextTurn', 'chooseDare');
+
+    const failed = play(reducer(99), restore(state), 'fail');
+
+    expect(selectPenalty(failed)).toEqual({ player: 'Ola', shots: 2 });
   });
 });
