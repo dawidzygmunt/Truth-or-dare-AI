@@ -93,6 +93,36 @@ describe('drawCard', () => {
   });
 });
 
+describe('drawCard after a kind is exhausted', () => {
+  it('starts a new full cycle of that kind in a different order', () => {
+    const random = createSeededRandom(3);
+    const start = createDeck(cardsOf('truth', 10), random);
+
+    const first = drawIds(start, 'truth', 10, random);
+    const second = drawIds(first.deck, 'truth', 10, random);
+
+    expect([...second.ids].sort()).toEqual([...first.ids].sort());
+    expect(second.ids).not.toEqual(first.ids);
+  });
+
+  it('leaves the piles of other kinds untouched', () => {
+    const random = createSeededRandom(3);
+    const start = createDeck([...cardsOf('truth', 2), ...cardsOf('dare', 5)], random);
+    const dareDrawn = drawIds(start, 'dare', 3, random);
+
+    const { deck } = drawIds(dareDrawn.deck, 'truth', 3, random);
+
+    expect(deck.dare).toBe(dareDrawn.deck.dare);
+  });
+
+  it('keeps serving the only card of a kind', () => {
+    const random = createSeededRandom(3);
+    const start = createDeck(cardsOf('truth', 1), random);
+
+    expect(drawIds(start, 'truth', 3, random).ids).toEqual(['truth-0', 'truth-0', 'truth-0']);
+  });
+});
+
 describe('createDeck', () => {
   it('normalizes a missing penalty to null so the deck survives a JSON round trip', () => {
     const random = createSeededRandom(3);
