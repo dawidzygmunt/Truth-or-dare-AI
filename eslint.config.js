@@ -17,6 +17,7 @@ export default defineConfig(
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      'apps/api/src/generated/**',
       'tooling/eslint/__fixtures__/**',
     ],
   },
