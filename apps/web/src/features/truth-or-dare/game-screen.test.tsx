@@ -51,6 +51,38 @@ describe('GameScreen', () => {
     expect(screen.queryByTestId('penalty')).not.toBeInTheDocument();
   });
 
+  it('offers "Piję" instead of "not done" in shots mode', async () => {
+    renderGame('shots');
+    await screen.findByTestId('current-player');
+
+    await click(pl.game.dare);
+
+    expect(screen.getByTestId('mark-not-done')).toHaveTextContent(pl.game.notDoneShots);
+    expect(screen.queryByRole('button', { name: pl.game.notDone })).not.toBeInTheDocument();
+  });
+
+  it('never offers drinking without penalties', async () => {
+    renderGame('none');
+    await screen.findByTestId('current-player');
+
+    await click(pl.game.dare);
+
+    expect(screen.getByTestId('mark-not-done')).toHaveTextContent(pl.game.notDone);
+    expect(screen.queryByRole('button', { name: pl.game.notDoneShots })).not.toBeInTheDocument();
+  });
+
+  it('gives the player the avatar tone of their position in the game', async () => {
+    renderGame();
+    await screen.findByTestId('current-player');
+    expect(screen.getByTestId('player-avatar')).toHaveAttribute('data-tone', 'pink');
+    await click(pl.game.truth);
+
+    await click(pl.game.done);
+
+    expect(screen.getByTestId('current-player')).toHaveTextContent('Kuba');
+    expect(screen.getByTestId('player-avatar')).toHaveAttribute('data-tone', 'cyan');
+  });
+
   it('moves straight to the next player after "not done" without penalties', async () => {
     renderGame('none');
     await screen.findByTestId('current-player');
@@ -69,7 +101,7 @@ describe('GameScreen', () => {
     await click(pl.game.dare);
     const shots = store.getState().game?.currentCard?.penaltyShots ?? 0;
 
-    await click(pl.game.notDone);
+    await click(pl.game.notDoneShots);
 
     expect(screen.getByTestId('penalty')).toHaveTextContent(pl.game.penalty('Ola', shots));
 
@@ -147,7 +179,7 @@ describe('GameScreen', () => {
       await screen.findByTestId('current-player');
       await click(pl.game.dare);
 
-      await click(pl.game.notDone);
+      await click(pl.game.notDoneShots);
       expect(screen.getByTestId('current-player')).toHaveFocus();
 
       await click(pl.game.next);
@@ -203,7 +235,7 @@ describe('GameScreen', () => {
       await click(pl.game.dare);
       const shots = store.getState().game?.currentCard?.penaltyShots ?? 0;
 
-      await click(pl.game.notDone);
+      await click(pl.game.notDoneShots);
 
       expect(announcer()).toHaveTextContent(pl.game.penalty('Ola', shots));
     });
