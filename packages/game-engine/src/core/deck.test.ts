@@ -46,6 +46,26 @@ describe('shuffle', () => {
     const input = Object.freeze([...items]);
     expect(() => shuffle(input, createSeededRandom(1))).not.toThrow();
   });
+
+  it('produces every permutation of three items about equally often', () => {
+    const trials = 6000;
+    const expected = trials / 6;
+    // Binomial sigma is about 29, so 150 is over five sigma: wide enough for any fair shuffle,
+    // narrow enough to catch a biased or partly fixed one (a stuck first element gives 3000 or 0).
+    const tolerance = 150;
+    const random = createSeededRandom(1);
+    const counts = new Map<string, number>();
+
+    for (let trial = 0; trial < trials; trial++) {
+      const permutation = shuffle([0, 1, 2], random).join('');
+      counts.set(permutation, (counts.get(permutation) ?? 0) + 1);
+    }
+
+    expect([...counts.keys()].sort()).toEqual(['012', '021', '102', '120', '201', '210']);
+    for (const count of counts.values()) {
+      expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+    }
+  });
 });
 
 describe('drawCard', () => {
@@ -143,5 +163,24 @@ describe('createDeck', () => {
     const deck = createDeck([{ id: 'a', kind: 'truth', template: 'a', penaltyShots: 2 }], random);
 
     expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBe(2);
+  });
+
+  // The contracts schema only allows a positive integer, so anything else is treated as "no
+  // penalty set" and falls back to the default of 1 shot.
+  it.each([0, -2, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 2 ** 53])(
+    'normalizes a penaltyShots of %s to null',
+    (penaltyShots) => {
+      const random = createSeededRandom(3);
+      const deck = createDeck([{ id: 'a', kind: 'truth', template: 'a', penaltyShots }], random);
+
+      expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBeNull();
+    },
+  );
+
+  it.each([1, 2, 5, 100])('keeps a positive integer penaltyShots of %s', (penaltyShots) => {
+    const random = createSeededRandom(3);
+    const deck = createDeck([{ id: 'a', kind: 'truth', template: 'a', penaltyShots }], random);
+
+    expect(drawCard(deck, 'truth', random)?.card.penaltyShots).toBe(penaltyShots);
   });
 });

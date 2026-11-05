@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { createCryptoRandom, createSeededRandom, pickOne } from './random.js';
+import {
+  createCryptoRandom,
+  createRandomFromUint32Source,
+  createSeededRandom,
+  pickOne,
+} from './random.js';
+
+const MAX_UINT32 = 0xffffffff;
+
+/** A uint32 source that replays `values` and counts how many were read. */
+function scriptedSource(values: readonly number[]) {
+  let reads = 0;
+  return {
+    next: () => {
+      const value = values[reads];
+      if (value === undefined) {
+        throw new Error(`source read ${reads + 1} times, only ${values.length} values scripted`);
+      }
+      reads += 1;
+      return value;
+    },
+    reads: () => reads,
+  };
+}
 
 function sequence(seed: number, length: number): number[] {
   const random = createSeededRandom(seed);
@@ -29,6 +52,55 @@ describe('createSeededRandom', () => {
   });
 });
 
+describe('createRandomFromUint32Source', () => {
+  // 2^32 mod 3 = 1, so the accepted values are [0, 2^32 - 1) and 0xffffffff is the one rejected.
+  it('rejects a value that would bias the result and reads the source again', () => {
+    const source = scriptedSource([MAX_UINT32, 0xfffffffe]);
+
+    const value = createRandomFromUint32Source(source.next).nextInt(3);
+
+    expect(value).toBe(2);
+    expect(source.reads()).toBe(2);
+  });
+
+  it('keeps reading until it gets a value below the limit', () => {
+    const source = scriptedSource([MAX_UINT32, MAX_UINT32, MAX_UINT32, 7]);
+
+    expect(createRandomFromUint32Source(source.next).nextInt(3)).toBe(1);
+    expect(source.reads()).toBe(4);
+  });
+
+  it('accepts the largest value below the limit without reading again', () => {
+    const source = scriptedSource([0xfffffffe]);
+
+    expect(createRandomFromUint32Source(source.next).nextInt(3)).toBe(2);
+    expect(source.reads()).toBe(1);
+  });
+
+  it('accepts every value when the range is a power of two, so nothing is rejected', () => {
+    const source = scriptedSource([MAX_UINT32]);
+
+    expect(createRandomFromUint32Source(source.next).nextInt(2 ** 32)).toBe(MAX_UINT32);
+    expect(source.reads()).toBe(1);
+  });
+
+  it('maps a value to its remainder', () => {
+    expect(createRandomFromUint32Source(scriptedSource([10]).next).nextInt(4)).toBe(2);
+    expect(createRandomFromUint32Source(scriptedSource([MAX_UINT32]).next).nextInt(2)).toBe(1);
+  });
+
+  it('returns 0 for a range of 1', () => {
+    expect(createRandomFromUint32Source(scriptedSource([MAX_UINT32]).next).nextInt(1)).toBe(0);
+  });
+
+  it('does not read the source for an invalid max', () => {
+    const source = scriptedSource([1]);
+
+    expect(() => createRandomFromUint32Source(source.next).nextInt(0)).toThrow(RangeError);
+    expect(source.reads()).toBe(0);
+  });
+});
+
 describe('createCryptoRandom', () => {
   it('returns integers from the whole [0, max) range', () => {
     const random = createCryptoRandom();
@@ -47,8 +119,8 @@ describe('createCryptoRandom', () => {
     expect(draw()).not.toEqual(draw());
   });
 
-  it('rejects an invalid max', () => {
-    expect(() => createCryptoRandom().nextInt(0)).toThrow(RangeError);
+  it.each([0, -1, 1.5, Number.NaN, 2 ** 32 + 1])('rejects a max of %s', (max) => {
+    expect(() => createCryptoRandom().nextInt(max)).toThrow(RangeError);
   });
 });
 

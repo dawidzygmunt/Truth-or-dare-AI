@@ -10,8 +10,11 @@ export interface Random {
 
 const UINT32_RANGE = 2 ** 32;
 
-/** Builds a `Random` over a uint32 source, using rejection sampling to avoid modulo bias. */
-function fromUint32Source(nextUint32: () => number): Random {
+/**
+ * Builds a `Random` over a uint32 source, using rejection sampling to avoid modulo bias.
+ * Exported for tests that script the source; deliberately not part of the package API.
+ */
+export function createRandomFromUint32Source(nextUint32: () => number): Random {
   return {
     nextInt(maxExclusive) {
       if (!Number.isInteger(maxExclusive) || maxExclusive < 1 || maxExclusive > UINT32_RANGE) {
@@ -30,7 +33,7 @@ function fromUint32Source(nextUint32: () => number): Random {
 /** Production generator backed by the platform CSPRNG. Holds no state worth restoring. */
 export function createCryptoRandom(): Random {
   const buffer = new Uint32Array(1);
-  return fromUint32Source(() => {
+  return createRandomFromUint32Source(() => {
     const [value = 0] = crypto.getRandomValues(buffer);
     return value;
   });
@@ -44,7 +47,7 @@ export function pickOne<T>(items: readonly T[], random: Random): T {
 /** Deterministic generator (mulberry32) for tests. Its position is not serializable. */
 export function createSeededRandom(seed: number): Random {
   let state = seed;
-  return fromUint32Source(() => {
+  return createRandomFromUint32Source(() => {
     state = (state + 0x6d2b79f5) | 0;
     let mixed = Math.imul(state ^ (state >>> 15), 1 | state);
     mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed;

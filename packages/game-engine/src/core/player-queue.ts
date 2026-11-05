@@ -21,9 +21,28 @@ export interface Neighbours {
   readonly right: string;
 }
 
+/** Separators, control and format characters: none of them shows up as a visible letter. */
+const INVISIBLE = /[\p{Z}\p{Cc}\p{Cf}]/gu;
+/** Zero width spaces and joiners, soft hyphens, bidi marks. Invisible, but not whitespace. */
+const FORMAT = /\p{Cf}/gu;
+
+/** What is stored and shown: the name as typed, in NFC, without surrounding whitespace. */
+function storedName(name: string): string {
+  return name.normalize('NFC').trim();
+}
+
+function isBlank(name: string): boolean {
+  return name.replace(INVISIBLE, '') === '';
+}
+
+/** Names with the same key look the same to a player, so they cannot be two players. */
+function duplicateKey(name: string): string {
+  return name.replace(FORMAT, '').normalize('NFC').toLowerCase();
+}
+
 export function createPlayerQueue(names: readonly string[]): Result<PlayerQueue, PlayerError> {
-  const players = names.map((name) => name.trim());
-  if (players.includes('')) {
+  const players = names.map(storedName);
+  if (players.some(isBlank)) {
     return err(new EmptyPlayerNameError());
   }
   if (players.length < MIN_PLAYERS) {
@@ -31,7 +50,7 @@ export function createPlayerQueue(names: readonly string[]): Result<PlayerQueue,
   }
   const seen = new Set<string>();
   for (const player of players) {
-    const key = player.toLowerCase();
+    const key = duplicateKey(player);
     if (seen.has(key)) {
       return err(new DuplicatePlayerNameError(player));
     }

@@ -3,6 +3,12 @@ import type { CardKind } from './deck.js';
 /** Base of all domain errors. `code` is stable, so the UI can map it to a translated message. */
 export abstract class GameError extends Error {
   abstract readonly code: string;
+
+  constructor(message?: string, options?: ErrorOptions) {
+    super(message, options);
+    // Logs and stack traces show the concrete class instead of a bare "Error".
+    this.name = new.target.name;
+  }
 }
 
 export class TooFewPlayersError extends GameError {
