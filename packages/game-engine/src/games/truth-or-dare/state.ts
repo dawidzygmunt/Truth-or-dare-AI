@@ -1,10 +1,6 @@
 import { createDeck, type Card, type Deck } from '../../core/deck.js';
 import { MissingCardKindError } from '../../core/errors.js';
-import {
-  createPlayerQueue,
-  type PlayerError,
-  type PlayerQueue,
-} from '../../core/player-queue.js';
+import { createPlayerQueue, type PlayerError, type PlayerQueue } from '../../core/player-queue.js';
 import type { Random } from '../../core/random.js';
 import { err, ok, type Result } from '../../core/result.js';
 

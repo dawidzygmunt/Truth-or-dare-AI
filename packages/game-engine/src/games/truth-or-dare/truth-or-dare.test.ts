@@ -231,7 +231,11 @@ describe('truth or dare flow', () => {
       setup({
         players: ['Ola', 'Kuba'],
         cards: [
-          { id: 't', kind: 'truth', template: '{player}>{randomPlayer}>{playerLeft}>{playerRight}' },
+          {
+            id: 't',
+            kind: 'truth',
+            template: '{player}>{randomPlayer}>{playerLeft}>{playerRight}',
+          },
           { id: 'd', kind: 'dare', template: 'dare' },
         ],
       }),
