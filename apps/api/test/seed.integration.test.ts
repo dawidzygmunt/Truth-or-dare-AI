@@ -1,7 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { seedGame } from '../prisma/seed/seed-game.js';
 import type { SeedCard, SeedGame } from '../prisma/seed/seed-data.schema.js';
-import { startTestDatabase, type TestDatabase } from './support/test-database.js';
+import { aCard, aGame, anEdition } from './support/catalog-fixtures.js';
+import {
+  insertCards,
+  insertGame,
+  startTestDatabase,
+  type TestDatabase,
+} from './support/test-database.js';
 
 const card = (id: string, overrides: Partial<SeedCard> = {}): SeedCard => ({
   id,
@@ -83,5 +89,80 @@ describe('seedGame', () => {
     await expect(
       database.prisma.edition.findUnique({ where: { slug: 'seed-test-edition' } }),
     ).resolves.toMatchObject({ name: 'Nowa nazwa' });
+  });
+
+  describe('with content the data does not describe', () => {
+    beforeEach(async () => {
+      await database.prisma.card.deleteMany();
+      await database.prisma.edition.deleteMany();
+      await database.prisma.game.deleteMany();
+    });
+
+    it('leaves the editions and cards of other games alone', async () => {
+      const edition = anEdition({ slug: 'other-game-edition' });
+      await insertGame(
+        database.prisma,
+        aGame({ slug: 'other-game', name: 'Inna gra', editions: [edition] }),
+      );
+      await insertCards(database.prisma, edition, [aCard({ id: 'other-game-card' })]);
+
+      await seedGame(database.prisma, game([card('a'), card('b')]));
+
+      await expect(
+        database.prisma.card.findUnique({ where: { id: 'other-game-card' } }),
+      ).resolves.not.toBeNull();
+      await expect(
+        database.prisma.edition.findUnique({ where: { slug: 'other-game-edition' } }),
+      ).resolves.toMatchObject({ isPublished: true });
+    });
+
+    it('keeps the cards of a sibling edition that the data does not list', async () => {
+      const sibling = anEdition({ slug: 'sibling-edition' });
+      await insertGame(
+        database.prisma,
+        aGame({ slug: 'seed-test-game', name: 'Gra', editions: [sibling] }),
+      );
+      await insertCards(database.prisma, sibling, [aCard({ id: 'sibling-card' })]);
+
+      await seedGame(database.prisma, game([card('a')]));
+
+      await expect(
+        database.prisma.card.findUnique({ where: { id: 'sibling-card' } }),
+      ).resolves.not.toBeNull();
+      await expect(database.prisma.card.findUnique({ where: { id: 'a' } })).resolves.not.toBeNull();
+    });
+
+    it('unpublishes, without deleting, editions of the game that left the data', async () => {
+      const removed = anEdition({ slug: 'removed-edition' });
+      await insertGame(
+        database.prisma,
+        aGame({ slug: 'seed-test-game', name: 'Gra', editions: [removed] }),
+      );
+
+      await seedGame(database.prisma, game([card('a')]));
+
+      await expect(
+        database.prisma.edition.findUnique({ where: { slug: 'removed-edition' } }),
+      ).resolves.toMatchObject({ isPublished: false });
+      await expect(
+        database.prisma.edition.findUnique({ where: { slug: 'seed-test-edition' } }),
+      ).resolves.toMatchObject({ isPublished: true });
+    });
+
+    it('unpublishes the old edition when a slug is renamed', async () => {
+      await seedGame(database.prisma, game([card('a')]));
+      const renamed = game([card('a')]);
+      const [edition] = renamed.editions;
+      if (!edition) throw new Error('fixture has an edition');
+      edition.slug = 'seed-test-edition-renamed';
+
+      await seedGame(database.prisma, renamed);
+
+      const editions = await database.prisma.edition.findMany({ orderBy: { slug: 'asc' } });
+      expect(editions.map(({ slug, isPublished }) => ({ slug, isPublished }))).toEqual([
+        { slug: 'seed-test-edition', isPublished: false },
+        { slug: 'seed-test-edition-renamed', isPublished: true },
+      ]);
+    });
   });
 });
