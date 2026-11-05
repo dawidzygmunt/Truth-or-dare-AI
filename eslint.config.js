@@ -19,6 +19,8 @@ export default defineConfig(
       '**/test-results/**',
       'apps/api/src/generated/**',
       'tooling/eslint/__fixtures__/**',
+      '.agents/**',
+      '.claude/worktrees/**',
     ],
   },
   js.configs.recommended,

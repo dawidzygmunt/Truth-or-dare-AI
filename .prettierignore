@@ -7,3 +7,6 @@ dev-dist
 apps/api/src/generated
 CLAUDE.md
 docs
+.agents
+.claude/worktrees
+.vitest
