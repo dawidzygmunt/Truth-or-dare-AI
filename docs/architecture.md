@@ -6,7 +6,7 @@ Status: wersja wstępna (listopad 2026). Zmiany decyzji zapisuj jako ADR w `docs
 
 Platforma gier imprezowych na telefon:
 
-- Gry karciane: prawda czy wyzwanie, pije ten kto, nigdy przenigdy oraz beer pong. W beer pongu aplikacja nie liczy kubków, tylko losuje wyzwanie dla gracza, któremu wrzucono piłeczkę do kubka.
+- Gry karciane: prawda czy wyzwanie, nigdy przenigdy oraz beer pong. W beer pongu aplikacja nie liczy kubków, tylko losuje wyzwanie dla gracza, któremu wrzucono piłeczkę do kubka.
 - Dwa tryby kar wybierane przy starcie gry:
   - **Shoty**: karta ma karę w liczbie shotów, wyświetlaną, gdy gracz nie wykona zadania.
   - **Bez kar**: gracz oznacza „nie wykonane” i gra toczy się dalej. Nic nie jest zapisywane.
@@ -259,7 +259,7 @@ Playwright, projekty: `iPhone 15` (WebKit), `Pixel 7` (Chromium). Scenariusze kr
 ## 11. Fazy
 
 1. **Fundament**: monorepo, CI, `game-engine` z prawdą czy wyzwanie (TDD), PWA z jedną darmową edycją, offline, E2E.
-2. **Katalog i treści**: api `catalog`, seed, kolejne gry (pije ten kto, beer pong), age gate, tryby kar.
+2. **Katalog i treści**: api `catalog`, seed, kolejne gry (beer pong, nigdy przenigdy), age gate, tryby kar.
 3. **Konta i płatności**: `identity`, `billing`, Stripe Checkout, pierwsza płatna edycja.
 4. **Google Play**: TWA, ADR o płatnościach na Androidzie, przegląd treści pod politykę Play.
 

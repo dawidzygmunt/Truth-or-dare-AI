@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Platforma gier imprezowych (prawda czy wyzwanie, pije ten kto, beer pong…) działająca jako PWA na telefonie, później opakowana jako aplikacja Android (TWA) w Google Play.
+Platforma gier imprezowych (prawda czy wyzwanie, beer pong, nigdy przenigdy) działająca jako PWA na telefonie, później opakowana jako aplikacja Android (TWA) w Google Play.
 
 Pełny opis architektury: `docs/architecture.md`. Decyzje: `docs/adr/`. Design: `docs/design/`.
 Przeczytaj `docs/architecture.md` przed pierwszą zmianą w nowym module.
