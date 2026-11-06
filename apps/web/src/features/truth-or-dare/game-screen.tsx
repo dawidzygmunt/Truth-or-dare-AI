@@ -164,14 +164,19 @@ function TurnControls({ game, cardRef }: TurnControlsProps) {
         )}
       </TurnStage>
       <Dock>
-        <Button
-          data-testid="next-turn"
-          onClick={() => {
-            dispatch({ type: 'nextTurn' });
-          }}
-        >
-          {pl.game.next}
-        </Button>
+        {/* Right half only: "not done" leads here, so a double tap on it must not land on "next". */}
+        <div className="grid grid-cols-2 gap-2.5 *:text-sm">
+          <div className="col-start-2">
+            <Button
+              data-testid="next-turn"
+              onClick={() => {
+                dispatch({ type: 'nextTurn' });
+              }}
+            >
+              {pl.game.next}
+            </Button>
+          </div>
+        </div>
       </Dock>
     </>
   );
