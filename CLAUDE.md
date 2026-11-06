@@ -73,8 +73,8 @@ Zasady testów:
 ## Treści i zgodność
 
 - Nowe karty i edycje: bez promowania upijania się ani picia na czas, bez treści seksualnie eksplicytnych (wymóg Google Play). Edycja ma pole `platforms`. Treści tylko na web oznaczaj `["web"]`.
-- Dwa tryby kar w sesji: `shots` (pokazuje `penaltyShots` z karty po „nie wykonane”) i `none` („nie wykonane” tylko przechodzi dalej). Nie sumuj shotów na gracza i nie rób rankingów picia.
-- Beer pong nie liczy kubków. To talia wyzwań dla gracza wskazanego jako trafiony.
+- Dwa tryby kar w sesji prawdy czy wyzwania: `shots` (pokazuje `penaltyShots` z karty po „nie wykonane”) i `none` („nie wykonane” tylko przechodzi dalej). Nie sumuj shotów na gracza i nie rób rankingów picia.
+- Beer pong i nigdy przenigdy to proste losowanie kart (`card_draw`, ADR 0008): wybór wersji, bez imion graczy i bez kar. Beer pong nie liczy kubków.
 - Age gate 18+ przy pierwszym uruchomieniu, zapamiętany lokalnie.
 
 ## Czego NIE robić

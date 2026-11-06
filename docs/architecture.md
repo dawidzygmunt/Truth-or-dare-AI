@@ -6,7 +6,7 @@ Status: wersja wstępna (listopad 2026). Zmiany decyzji zapisuj jako ADR w `docs
 
 Platforma gier imprezowych na telefon:
 
-- Gry karciane: prawda czy wyzwanie, nigdy przenigdy oraz beer pong. W beer pongu aplikacja nie liczy kubków, tylko losuje wyzwanie dla gracza, któremu wrzucono piłeczkę do kubka.
+- Gry karciane: prawda czy wyzwanie, nigdy przenigdy oraz beer pong. Beer pong i nigdy przenigdy to proste losowanie kart bez imion graczy i kar (ADR 0008). W beer pongu aplikacja nie liczy kubków.
 - Dwa tryby kar wybierane przy starcie gry:
   - **Shoty**: karta ma karę w liczbie shotów, wyświetlaną, gdy gracz nie wykona zadania.
   - **Bez kar**: gracz oznacza „nie wykonane” i gra toczy się dalej. Nic nie jest zapisywane.
@@ -99,8 +99,7 @@ game-engine/src/
 │  └─ template.ts          rozwiązywanie placeholderów
 ├─ games/
 │  ├─ truth-or-dare/       stan, akcje (chooseTruth, chooseDare, skip, next), reguły
-│  ├─ who-drinks/
-│  └─ beer-pong/           wybór trafionego gracza → wyzwanie dla niego
+│  └─ card-draw/           losowanie kart: beer pong i nigdy przenigdy
 └─ index.ts
 ```
 
@@ -119,12 +118,11 @@ complete() | fail() → nextTurn() …
   fail() w trybie "none"  → state.penalty = null
 ```
 
-Przepływ beer pong (kolejka tur nie jest używana, bo kolejność wyznacza gra przy stole):
+Przepływ `card_draw`, czyli beer pong i nigdy przenigdy (bez graczy, kolejki i kar, ADR 0008):
 
 ```
-setup(players, cards) → hit("Kuba") → state.currentPlayer = "Kuba",
-                                      state.currentCard = resolve(drawFrom("challenge"))
-complete() | fail() → oczekiwanie na kolejne hit(...)
+setup(cards) → draw() → state.currentCard = drawFrom(talia)
+draw() → kolejna karta; po wyczerpaniu talia jest tasowana od nowa
 ```
 
 ## 5. `apps/api`: NestJS w Clean Architecture
@@ -182,8 +180,7 @@ apps/web/src/
 │  ├─ catalog/        lista gier i edycji, ekran zakupu
 │  ├─ session-setup/  dodawanie graczy, wybór edycji, tryb kar (shoty / bez kar)
 │  ├─ truth-or-dare/  ekrany gry (renderują stan z game-engine)
-│  ├─ who-drinks/
-│  ├─ beer-pong/
+│  ├─ card-draw/      beer pong i nigdy przenigdy
 │  └─ account/        logowanie, zakupy
 ├─ shared/
 │  ├─ api/            klient HTTP (typy z contracts), TanStack Query hooks

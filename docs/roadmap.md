@@ -50,12 +50,12 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 
 ## Faza 2: kolejne gry i treści
 
-Zakres: trzy gry, patrz D9. Warunek wejścia: TD.4.
+Zakres: trzy gry, patrz D9. Mechanika: ADR 0008. Warunek wejścia: TD.4.
 
-- [ ] T7.1 `game-engine`: nigdy przenigdy (O)
-- [ ] T7.2 `game-engine`: beer pong, `hit(player)` bez kolejki tur, talia wyzwań pod beer ponga (O)
-- [ ] T7.3 Seed: edycje beer pong i nigdy przenigdy, przegląd zgodności treści (S)
-- [ ] T7.4 Web: ekrany obu gier, testy Playwright (S)
+- [ ] T7.1 `game-engine`: reduktor `card_draw` dla beer ponga i nigdy przenigdy, bez graczy i kar (O)
+- [ ] T7.2 Api i kontrakty: `card_draw` w `GameEngine`, migracja (S)
+- [ ] T7.3 Seed: po kilka wersji kart dla obu gier, walidacja braku placeholderów i `penaltyShots`, przegląd zgodności treści (S)
+- [ ] T7.4 Web: wspólny ekran losowania, wybór wersji, testy Playwright (S)
 - [ ] T7.5 Web: instalacja przez `beforeinstallprompt` na Androidzie (S)
 
 ## Faza 3: konta i płatności
@@ -99,7 +99,7 @@ Zakres: trzy gry, patrz D9. Warunek wejścia: TD.4.
 - [x] D6 Subskrypcje odłożone: na razie bez nich, wracamy do tematu przy fazie 3 (decyzja użytkownika, 2026-11-05). Ceny 19 zł / 96 zł z projektu SZOT nie są przyjęte.
 - [x] D7 Teksty paywalla z projektu SZOT zostają („2000+ kart, nowe co tydzień”, „zero reklam”). Muszą być prawdziwe w chwili publikacji paywalla, patrz T8.7.
 - [x] D8 Poziomy Łagodne / Ostre / Hardcore to edycje (`Edition`), bez zmiany modelu danych.
-- [x] D9 Na razie trzy gry: prawda czy wyzwanie, beer pong (losuje wyzwanie z talii pod beer ponga) i nigdy przenigdy. „Pije ten kto” odłożone, mimo że jest w KICKOFF. Pozostałe tematy z projektu SZOT, w tym drużyny i punktacja, też odłożone (decyzja użytkownika, 2026-11-07).
+- [x] D9 Trzy gry: prawda czy wyzwanie, beer pong i nigdy przenigdy. „Pije ten kto” z KICKOFF to nigdy przenigdy, nie osobna gra. Beer pong i nigdy przenigdy to losowanie kart z wyborem wersji, bez imion i kar (ADR 0008). Tematy z projektu SZOT są usunięte i nie będą dodawane (decyzja użytkownika, 2026-11-07).
 - [?] D4 Literówki w `architecture.md`: „faza 5” w sekcji 12 powinna być fazą 4; sekcja 11 umieszcza `catalog` i age gate w fazie 2, a KICKOFF w fazie 1 (przyjęty KICKOFF).
 - [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone; §4 pokazuje reduktor zwracający stan, a silnik zwraca `Result` (plan 003).
 
