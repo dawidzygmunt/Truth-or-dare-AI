@@ -122,7 +122,8 @@ Przepływ `card_draw`, czyli beer pong i nigdy przenigdy (bez graczy, kolejki i 
 
 ```
 setup(cards) → draw() → state.currentCard = drawFrom(talia)
-draw() → kolejna karta; po wyczerpaniu talia jest tasowana od nowa
+draw() → kolejna karta; po ostatniej karcie state.phase = "finished" (ekran końca kart)
+restart() → ta sama talia potasowana od nowa, state.phase = "drawing"
 ```
 
 ## 5. `apps/api`: NestJS w Clean Architecture

@@ -52,10 +52,10 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 
 Zakres: trzy gry, patrz D9. Mechanika: ADR 0008. Warunek wejścia: TD.4.
 
-- [ ] T7.1 `game-engine`: reduktor `card_draw` dla beer ponga i nigdy przenigdy, bez graczy i kar (O)
+- [ ] T7.1 `game-engine`: reduktor `card_draw` dla beer ponga i nigdy przenigdy, bez graczy i kar, z końcem talii i `restart` (O)
 - [ ] T7.2 Api i kontrakty: `card_draw` w `GameEngine`, migracja (S)
 - [ ] T7.3 Seed: po kilka wersji kart dla obu gier, walidacja braku placeholderów i `penaltyShots`, przegląd zgodności treści (S)
-- [ ] T7.4 Web: wspólny ekran losowania, wybór wersji, testy Playwright (S)
+- [ ] T7.4 Web: wspólny ekran losowania, wybór wersji, ekran końca kart z „Zagraj ponownie”, testy Playwright (S)
 - [ ] T7.5 Web: instalacja przez `beforeinstallprompt` na Androidzie (S)
 
 ## Faza 3: konta i płatności

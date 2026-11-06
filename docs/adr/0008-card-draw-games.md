@@ -15,7 +15,7 @@ Zaakceptowany. Zastępuje w ADR 0004 część „Beer pong jako karty” oraz za
 
 **Wspólny silnik.** Nowa wartość `GameEngine`: `card_draw`. W `packages/game-engine` jeden reduktor `games/card-draw/` obsługuje obie gry. `card_deck` zostaje bez zmian i oznacza przepływ prawdy czy wyzwania.
 
-**Przepływ.** Gra → wybór wersji (`Edition`) → losowanie. Akcja to dobranie następnej karty. Po wyczerpaniu talii silnik tasuje ją od nowa, jak w `core/deck.ts`.
+**Przepływ.** Gra → wybór wersji (`Edition`) → losowanie. Akcja to dobranie następnej karty. Po ostatniej karcie gra przechodzi w fazę `finished`: ekran informuje o końcu kart i ma przycisk „Zagraj ponownie”, który tasuje tę samą talię od nowa (`restart`). Talia nie tasuje się sama.
 
 **Bez graczy i kar.** Gry `card_draw` nie mają ekranu graczy, kolejki tur, placeholderów, `penaltyShots` ani trybu kar. Nie ma „wykonane” ani „nie wykonane”.
 
