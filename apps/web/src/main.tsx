@@ -1,3 +1,5 @@
+import '@fontsource-variable/dm-sans/wght.css';
+import '@fontsource-variable/space-grotesk/wght.css';
 import { createCryptoRandom } from '@tod/game-engine';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

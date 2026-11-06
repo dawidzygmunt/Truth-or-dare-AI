@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Platforma gier imprezowych (prawda czy wyzwanie, pije ten kto, beer pong…) działająca jako PWA na telefonie, później opakowana jako aplikacja Android (TWA) w Google Play.
+Platforma gier imprezowych (prawda czy wyzwanie, beer pong, nigdy przenigdy) działająca jako PWA na telefonie, później opakowana jako aplikacja Android (TWA) w Google Play.
 
 Pełny opis architektury: `docs/architecture.md`. Decyzje: `docs/adr/`. Design: `docs/design/`.
 Przeczytaj `docs/architecture.md` przed pierwszą zmianą w nowym module.
@@ -65,7 +65,7 @@ Zasady testów:
 - Commity: Conventional Commits (`feat(game-engine): …`, `fix(api): …`), krótkie (jedna linia tytułu, body tylko gdy naprawdę potrzebne).
 - Bez stopek o współautorstwie AI (`Co-Authored-By: Claude…`, „Generated with Claude Code” itp.) w commitach i PR-ach.
 - Git: remote `origin` = `git@github.com:dawidzygmunt/Truth-or-dare-AI.git`. Każdy feature/krok na osobnym branchu (`feat/…`, `chore/…`, `fix/…`) od `main`; push brancha i PR do `main`. Nie commituj bezpośrednio na `main`.
-- Bez `gh` CLI (za szerokie uprawnienia). PR otwiera użytkownik: po pushu podaj link `https://github.com/dawidzygmunt/Truth-or-dare-AI/compare/main...<branch>?expand=1` oraz gotowy tytuł i opis PR.
+- Bez `gh` CLI. PR otwiera agent przez `curl` do API GitHuba, z tokenem z `~/.config/tod/github-token` (fine-grained, tylko Pull requests na tym repo). Tokenu nie wypisuj i nie przekazuj w argumencie komendy. Merge robi użytkownik: po otwarciu podaj link do PR.
 - Nazwy plików: `kebab-case.ts`; use case: `start-session.use-case.ts`; port: `card-repository.port.ts`.
 - Błędy domenowe jako klasy (`EditionLockedError`), mapowane na HTTP w warstwie presentation.
 - Bez `any`. Bez `// @ts-ignore` bez komentarza z uzasadnieniem.
@@ -73,8 +73,8 @@ Zasady testów:
 ## Treści i zgodność
 
 - Nowe karty i edycje: bez promowania upijania się ani picia na czas, bez treści seksualnie eksplicytnych (wymóg Google Play). Edycja ma pole `platforms`. Treści tylko na web oznaczaj `["web"]`.
-- Dwa tryby kar w sesji: `shots` (pokazuje `penaltyShots` z karty po „nie wykonane”) i `none` („nie wykonane” tylko przechodzi dalej). Nie sumuj shotów na gracza i nie rób rankingów picia.
-- Beer pong nie liczy kubków. To talia wyzwań dla gracza wskazanego jako trafiony.
+- Dwa tryby kar w sesji prawdy czy wyzwania: `shots` (pokazuje `penaltyShots` z karty po „nie wykonane”) i `none` („nie wykonane” tylko przechodzi dalej). Nie sumuj shotów na gracza i nie rób rankingów picia.
+- Beer pong i nigdy przenigdy to proste losowanie kart (`card_draw`, ADR 0008): wybór wersji, bez imion graczy i bez kar. Beer pong nie liczy kubków.
 - Age gate 18+ przy pierwszym uruchomieniu, zapamiętany lokalnie.
 
 ## Czego NIE robić

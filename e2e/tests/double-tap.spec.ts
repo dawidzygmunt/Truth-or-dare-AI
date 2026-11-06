@@ -68,6 +68,43 @@ test.describe('double tap', () => {
     }
   });
 
+  test('on a card outcome never picks the next card', async ({ page }) => {
+    await openAsGuest(page);
+    await startGame(page);
+
+    for (let turn = 0; turn < TURNS; turn += 1) {
+      const truth = await boxOf(page.getByTestId('choose-truth'));
+      const dare = await boxOf(page.getByTestId('choose-dare'));
+      await drawCard(page, 'dare');
+      const done = await boxOf(page.getByTestId('mark-done'));
+      const notDone = await boxOf(page.getByTestId('mark-not-done'));
+      await page.getByTestId('mark-done').click();
+      await expect(page.getByTestId('choose-truth')).toBeVisible();
+
+      expect(overlaps(done, truth) || overlaps(done, dare)).toBe(false);
+      expect(overlaps(notDone, truth) || overlaps(notDone, dare)).toBe(false);
+    }
+  });
+
+  test('on "not done" in shots mode never skips the penalty', async ({ page }) => {
+    await openAsGuest(page);
+    await startGame(page, { penaltyMode: 'shots' });
+
+    for (let turn = 0; turn < TURNS; turn += 1) {
+      await drawCard(page, 'dare');
+      const notDone = page.getByTestId('mark-not-done');
+      const notDoneBox = await boxOf(notDone);
+
+      await doubleTap(page, notDone);
+
+      await expect(page.getByTestId('penalty')).toBeVisible();
+      const next = page.getByTestId('next-turn');
+      expect(overlaps(await boxOf(next), notDoneBox)).toBe(false);
+      await next.click();
+      await expect(page.getByTestId('choose-truth')).toBeVisible();
+    }
+  });
+
   test('on "end game" only asks for confirmation', async ({ page }) => {
     await openAsGuest(page);
     await startGame(page);

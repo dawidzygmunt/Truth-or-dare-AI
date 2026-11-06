@@ -50,12 +50,13 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 
 ## Faza 2: kolejne gry i treści
 
-- [ ] T7.1 `game-engine`: pije ten kto (O)
-- [ ] T7.2 `game-engine`: beer pong, `hit(player)` bez kolejki tur (O)
-- [ ] T7.3 Seed: edycje pije ten kto i beer pong, przegląd zgodności treści (S)
-- [ ] T7.4 Web: ekrany obu gier, testy Playwright (S)
+Zakres: trzy gry, patrz D9. Mechanika: ADR 0008. Warunek wejścia: TD.4.
+
+- [ ] T7.1 `game-engine`: reduktor `card_draw` dla beer ponga i nigdy przenigdy, bez graczy i kar, z końcem talii i `restart` (O)
+- [ ] T7.2 Api i kontrakty: `card_draw` w `GameEngine`, migracja (S)
+- [ ] T7.3 Seed: po kilka wersji kart dla obu gier, walidacja braku placeholderów i `penaltyShots`, przegląd zgodności treści (S)
+- [ ] T7.4 Web: wspólny ekran losowania, wybór wersji, ekran końca kart z „Zagraj ponownie”, testy Playwright (S)
 - [ ] T7.5 Web: instalacja przez `beforeinstallprompt` na Androidzie (S)
-- [?] T7.6 Nigdy przenigdy, patrz D1
 
 ## Faza 3: konta i płatności
 
@@ -65,7 +66,7 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 - [ ] T8.4 `billing`: Stripe Checkout, idempotentny webhook (O)
 - [ ] T8.5 `catalog`: `EntitlementChecker`, flaga `locked`, talia płatna po uprawnieniach (O). Warunek: service worker nie może polegać na zapisanym katalogu przy decyzji o cache'u talii (znacznik tier w odpowiedzi albo świeży katalog), inaczej nieaktualny `free` wpuści płatną talię do `tod-free-decks`
 - [ ] T8.6 Web: logowanie, ekran zakupu, odświeżenie `/me`, płatne talie w IndexedDB (O)
-- [ ] T8.7 Pierwsza płatna edycja „Spicy” i produkty, w tym all access (S)
+- [ ] T8.7 Pierwsza płatna edycja i produkty, w tym all access (S). Poziomy Ostre i Hardcore to edycje (D8). Przed publikacją paywalla sprawdzić, czy treść pokrywa obietnice z D7
 - [ ] T8.8 Playwright: płatna edycja dla gościa, zakup z webhookiem (S)
 
 ## Faza 4: Google Play
@@ -92,9 +93,13 @@ Zakres według KICKOFF (obejmuje też minimalny `catalog`, seed i age gate).
 
 ## Otwarte decyzje
 
-- [?] D1 Czy „nigdy przenigdy” wchodzi do zakresu? Jest w `architecture.md`, nie ma w KICKOFF ani `CLAUDE.md`.
+- [x] D1 „Nigdy przenigdy” wchodzi do zakresu, patrz D9.
 - [?] D2 Hosting api i bazy (przed publikacją).
 - [?] D3 Potwierdzenie założeń z KICKOFF: tylko polski, jednorazowe zakupy + all access, logowanie Google + magic link.
+- [x] D6 Subskrypcje odłożone: na razie bez nich, wracamy do tematu przy fazie 3 (decyzja użytkownika, 2026-11-05). Ceny 19 zł / 96 zł z projektu SZOT nie są przyjęte.
+- [x] D7 Teksty paywalla z projektu SZOT zostają („2000+ kart, nowe co tydzień”, „zero reklam”). Muszą być prawdziwe w chwili publikacji paywalla, patrz T8.7.
+- [x] D8 Poziomy Łagodne / Ostre / Hardcore to edycje (`Edition`), bez zmiany modelu danych.
+- [x] D9 Trzy gry: prawda czy wyzwanie, beer pong i nigdy przenigdy. „Pije ten kto” z KICKOFF to nigdy przenigdy, nie osobna gra. Beer pong i nigdy przenigdy to losowanie kart z wyborem wersji, bez imion i kar (ADR 0008). Drużyny, punktacja i pozostałe elementy projektu SZOT spoza planu 007 są na razie usunięte z zakresu i ich nie dodajemy (decyzja użytkownika, 2026-11-07).
 - [?] D4 Literówki w `architecture.md`: „faza 5” w sekcji 12 powinna być fazą 4; sekcja 11 umieszcza `catalog` i age gate w fazie 2, a KICKOFF w fazie 1 (przyjęty KICKOFF).
 - [?] D5 Rozjazdy w dokumentach do ujednolicenia: i18n w `apps/web/src/i18n` (`CLAUDE.md`) czy `shared/i18n/` (`architecture.md` §6); numeracja faz płatności w §7 (faza 1/2) wobec §11 (faza 3/4); akcje `skip`/`next` i losowa kolejka w §4 wobec `complete`/`fail` i rotacji w KICKOFF (ADR 0004 idzie za KICKOFF); nazwy projektów Playwright w §9; plan 001 mówi, że `verbatimModuleSyntax` jest w api wyłączone, a jest włączone; §4 pokazuje reduktor zwracający stan, a silnik zwraca `Result` (plan 003).
 

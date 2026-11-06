@@ -74,6 +74,38 @@ test.describe('offline after the first load', () => {
     await expectCurrentPlayer(page, bartek);
   });
 
+  test('the fonts with Polish glyphs load from the precache without a network', async ({
+    page,
+    context,
+  }) => {
+    await openAsGuest(page);
+    await goOffline(page, context);
+
+    await page.reload();
+    await expect(page.getByTestId(`edition-${EDITION_SLUG}`)).toBeVisible();
+
+    // A face that cannot be fetched rejects here. `check()` would not notice: it says yes to
+    // anything without a matching face.
+    const statuses = await page.evaluate(async () => {
+      const load = (font: string) => document.fonts.load(font, 'ąćęłńóśźżĄŻ');
+      const faces = [
+        ...(await load('700 16px "Space Grotesk Variable"')),
+        ...(await load('400 16px "DM Sans Variable"')),
+      ];
+      return faces.map(({ family, status, unicodeRange }) => ({
+        family,
+        status,
+        latinExt: unicodeRange.includes('U+100'),
+      }));
+    });
+
+    for (const family of ['Space Grotesk Variable', 'DM Sans Variable']) {
+      expect(statuses.filter((face) => face.family.includes(family) && face.latinExt)).toEqual([
+        expect.objectContaining({ status: 'loaded' }),
+      ]);
+    }
+  });
+
   test('a game in progress is restored after a reload without a network', async ({
     page,
     context,

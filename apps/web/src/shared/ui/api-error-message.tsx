@@ -13,7 +13,7 @@ export function ApiErrorMessage({ error, onRetry }: ApiErrorMessageProps) {
   const code = apiErrorCode(error);
   return (
     <>
-      <p role="alert" data-testid="api-error" className="text-red-400">
+      <p role="alert" data-testid="api-error" className="text-center text-sm text-danger">
         {pl.apiErrors[code]}
       </p>
       {!NOT_RETRYABLE.has(code) && (

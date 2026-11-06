@@ -26,7 +26,7 @@ test.describe('reload in the middle of a game', () => {
     await page.reload();
 
     await expectCurrentPlayer(page, bartek);
-    await expect(page.getByTestId('card-kind')).toHaveText(kind);
+    await expect(page.getByTestId('card-kind')).toHaveText(kind, { useInnerText: true });
     await expect(page.getByTestId('card-text')).toHaveText(text);
     await expect(page.getByTestId('mark-done')).toBeEnabled();
     await expect(page.getByTestId('mark-not-done')).toBeEnabled();

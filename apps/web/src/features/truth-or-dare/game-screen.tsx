@@ -1,18 +1,31 @@
-import type { TruthOrDareState } from '@tod/game-engine';
+import type { TruthOrDareKind, TruthOrDareState } from '@tod/game-engine';
 import {
   selectCurrentCard,
   selectCurrentPlayer,
   selectPenalty,
+  selectPenaltyMode,
   selectPhase,
 } from '@tod/game-engine';
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { pl } from '../../i18n/pl.js';
-import { Button, textActionClasses } from '../../shared/ui/button.js';
+import { Avatar } from '../../shared/ui/avatar.js';
+import { Button, topActionClasses } from '../../shared/ui/button.js';
 import { ConfirmPanel } from '../../shared/ui/confirm-panel.js';
+import { Dock } from '../../shared/ui/dock.js';
 import { LoadingMessage } from '../../shared/ui/loading-message.js';
-import { Screen } from '../../shared/ui/screen.js';
+import { Screen, ScreenFrame } from '../../shared/ui/screen.js';
 import { useGameStore } from './game-store-context.js';
+
+const kindClasses: Readonly<Record<TruthOrDareKind, string>> = {
+  truth: 'bg-card-truth shadow-glow-truth',
+  dare: 'bg-card-dare shadow-glow-dare',
+};
+
+const kindLabels: Readonly<Record<TruthOrDareKind, string>> = {
+  truth: pl.game.truth,
+  dare: pl.game.dare,
+};
 
 /** What a screen reader says after a move. The screen shows the same through its layout. */
 function announcement(game: TruthOrDareState): string {
@@ -20,12 +33,45 @@ function announcement(game: TruthOrDareState): string {
   const penalty = selectPenalty(game);
   const player = selectCurrentPlayer(game);
   if (card !== null) {
-    return pl.game.announceCard(card.kind === 'truth' ? pl.game.truth : pl.game.dare, card.text);
+    return pl.game.announceCard(kindLabels[card.kind], card.text);
   }
   if (penalty !== null) {
     return pl.game.penalty(penalty.player, penalty.shots);
   }
   return player === null ? '' : pl.game.announceTurn(player);
+}
+
+interface ChoiceTileProps {
+  readonly kind: TruthOrDareKind;
+  readonly mark: string;
+  readonly testId: string;
+  readonly onChoose: () => void;
+}
+
+function ChoiceTile({ kind, mark, testId, onChoose }: ChoiceTileProps) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      className={`relative flex min-h-40 items-end overflow-hidden rounded-card p-5.5 text-left font-display text-title font-bold text-ink ${kindClasses[kind]}`}
+      onClick={onChoose}
+    >
+      <span aria-hidden="true" className="absolute -top-4 right-4 text-[120px] opacity-18">
+        {mark}
+      </span>
+      {kindLabels[kind]}
+    </button>
+  );
+}
+
+const bigCardClasses =
+  'flex min-h-[max(280px,46dvh)] flex-col justify-center gap-4.5 rounded-card px-5.5 py-7.5 text-center font-display font-bold text-ink';
+
+const kindLabelClasses = 'text-label tracking-label uppercase';
+
+/** Middle of the screen, above the actions. A tap on those never lands on what comes next. */
+function TurnStage({ children }: { readonly children: ReactNode }) {
+  return <div className="flex flex-1 flex-col justify-center gap-3">{children}</div>;
 }
 
 interface TurnControlsProps {
@@ -40,79 +86,98 @@ function TurnControls({ game, cardRef }: TurnControlsProps) {
 
   if (selectPhase(game) === 'choosing') {
     return (
-      <>
-        <Button
-          data-testid="choose-truth"
-          onClick={() => {
+      <TurnStage>
+        <ChoiceTile
+          kind="truth"
+          mark={pl.game.truthMark}
+          testId="choose-truth"
+          onChoose={() => {
             dispatch({ type: 'chooseTruth' });
           }}
-        >
-          {pl.game.truth}
-        </Button>
-        <Button
-          data-testid="choose-dare"
-          onClick={() => {
+        />
+        <ChoiceTile
+          kind="dare"
+          mark={pl.game.dareMark}
+          testId="choose-dare"
+          onChoose={() => {
             dispatch({ type: 'chooseDare' });
           }}
-        >
-          {pl.game.dare}
-        </Button>
-      </>
+        />
+      </TurnStage>
     );
   }
 
   if (card !== null) {
     return (
       <>
-        <section
-          ref={cardRef}
-          tabIndex={-1}
-          data-testid="card"
-          className="flex flex-col gap-2 rounded-xl border border-neutral-600 p-4 outline-none"
-        >
-          <p data-testid="card-kind" className="text-neutral-400">
-            {card.kind === 'truth' ? pl.game.truth : pl.game.dare}
-          </p>
-          <p data-testid="card-text" className="text-xl">
-            {card.text}
-          </p>
-        </section>
-        <Button
-          data-testid="mark-done"
-          onClick={() => {
-            dispatch({ type: 'complete' });
-          }}
-        >
-          {pl.game.done}
-        </Button>
-        <Button
-          data-testid="mark-not-done"
-          variant="secondary"
-          onClick={() => {
-            dispatch({ type: 'fail' });
-          }}
-        >
-          {pl.game.notDone}
-        </Button>
+        <TurnStage>
+          <section
+            ref={cardRef}
+            tabIndex={-1}
+            data-testid="card"
+            className={`${bigCardClasses} outline-none ${kindClasses[card.kind]}`}
+          >
+            <p data-testid="card-kind" className={kindLabelClasses}>
+              {kindLabels[card.kind]}
+            </p>
+            <p data-testid="card-text" className="text-card wrap-anywhere hyphens-auto">
+              {card.text}
+            </p>
+          </section>
+        </TurnStage>
+        <Dock>
+          <div className="flex gap-2.5 *:text-sm">
+            <Button
+              data-testid="mark-not-done"
+              variant="secondary"
+              onClick={() => {
+                dispatch({ type: 'fail' });
+              }}
+            >
+              {selectPenaltyMode(game) === 'shots' ? pl.game.notDoneShots : pl.game.notDone}
+            </Button>
+            <Button
+              data-testid="mark-done"
+              variant="success"
+              onClick={() => {
+                dispatch({ type: 'complete' });
+              }}
+            >
+              {pl.game.done}
+            </Button>
+          </div>
+        </Dock>
       </>
     );
   }
 
   return (
     <>
-      {penalty !== null && (
-        <p data-testid="penalty" className="text-2xl font-semibold">
-          {pl.game.penalty(penalty.player, penalty.shots)}
-        </p>
-      )}
-      <Button
-        data-testid="next-turn"
-        onClick={() => {
-          dispatch({ type: 'nextTurn' });
-        }}
-      >
-        {pl.game.next}
-      </Button>
+      <TurnStage>
+        {penalty !== null && (
+          <section className={`${bigCardClasses} ${kindClasses.dare}`}>
+            <p className={kindLabelClasses}>{pl.game.penaltyLabel}</p>
+            <p data-testid="penalty" className="text-title wrap-anywhere">
+              {pl.game.penalty(penalty.player, penalty.shots)}
+            </p>
+          </section>
+        )}
+      </TurnStage>
+      <Dock>
+        {/* Right half only: "not done" leads here, so a double tap on it must not land on "next". */}
+        <div className="grid grid-cols-2 gap-2.5 *:text-sm">
+          <div className="col-start-2">
+            <Button
+              data-testid="next-turn"
+              onClick={() => {
+                dispatch({ type: 'nextTurn' });
+              }}
+            >
+              {pl.game.next}
+            </Button>
+          </div>
+        </div>
+      </Dock>
     </>
   );
 }
@@ -140,37 +205,50 @@ export function GameScreen() {
     return hydrated ? (
       <Navigate to="/" replace />
     ) : (
-      <Screen title={pl.game.title}>
+      <Screen title={pl.game.title} centered>
         <LoadingMessage />
       </Screen>
     );
   }
 
+  const currentPlayer = selectCurrentPlayer(game);
+
   return (
-    <Screen
-      title={selectCurrentPlayer(game) ?? pl.game.title}
-      titleTestId="current-player"
-      titleRef={titleRef}
-      action={
-        !confirmingEnd && (
+    <ScreenFrame tone="game">
+      <div className="flex min-h-12 items-center">
+        {!confirmingEnd && (
           <button
             type="button"
             data-testid="end-game"
-            className={`${textActionClasses} shrink-0 text-neutral-400`}
+            className={topActionClasses}
             onClick={() => {
               setConfirmingEnd(true);
             }}
           >
+            <span aria-hidden="true">{pl.common.backSymbol}</span>
             {pl.game.end}
           </button>
-        )
-      }
-    >
+        )}
+      </div>
+      <header className="flex items-center justify-center gap-2.5">
+        {currentPlayer !== null && (
+          <Avatar name={currentPlayer} index={game.queue.players.indexOf(currentPlayer)} />
+        )}
+        <p className="shrink-0 text-ink-soft">{pl.game.turn}</p>
+        <h1
+          ref={titleRef}
+          tabIndex={-1}
+          data-testid="current-player"
+          className="min-w-0 font-bold wrap-anywhere outline-none"
+        >
+          {currentPlayer ?? pl.game.title}
+        </h1>
+      </header>
       <p data-testid="game-announcer" aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement(game)}
       </p>
       {error !== null && (
-        <p role="alert" data-testid="game-error" className="text-red-400">
+        <p role="alert" data-testid="game-error" className="text-center text-sm text-danger">
           {pl.gameErrors[error]}
         </p>
       )}
@@ -191,10 +269,10 @@ export function GameScreen() {
           }}
         />
       ) : (
-        <div data-testid="turn-actions" className="flex flex-col gap-6">
+        <div data-testid="turn-actions" className="flex flex-1 flex-col gap-6">
           <TurnControls game={game} cardRef={cardRef} />
         </div>
       )}
-    </Screen>
+    </ScreenFrame>
   );
 }

@@ -6,7 +6,7 @@ Status: wersja wstępna (listopad 2026). Zmiany decyzji zapisuj jako ADR w `docs
 
 Platforma gier imprezowych na telefon:
 
-- Gry karciane: prawda czy wyzwanie, pije ten kto, nigdy przenigdy oraz beer pong. W beer pongu aplikacja nie liczy kubków, tylko losuje wyzwanie dla gracza, któremu wrzucono piłeczkę do kubka.
+- Gry karciane: prawda czy wyzwanie, nigdy przenigdy oraz beer pong. Beer pong i nigdy przenigdy to proste losowanie kart bez imion graczy i kar (ADR 0008). W beer pongu aplikacja nie liczy kubków.
 - Dwa tryby kar wybierane przy starcie gry:
   - **Shoty**: karta ma karę w liczbie shotów, wyświetlaną, gdy gracz nie wykona zadania.
   - **Bez kar**: gracz oznacza „nie wykonane” i gra toczy się dalej. Nic nie jest zapisywane.
@@ -99,8 +99,7 @@ game-engine/src/
 │  └─ template.ts          rozwiązywanie placeholderów
 ├─ games/
 │  ├─ truth-or-dare/       stan, akcje (chooseTruth, chooseDare, skip, next), reguły
-│  ├─ who-drinks/
-│  └─ beer-pong/           wybór trafionego gracza → wyzwanie dla niego
+│  └─ card-draw/           losowanie kart: beer pong i nigdy przenigdy
 └─ index.ts
 ```
 
@@ -119,12 +118,12 @@ complete() | fail() → nextTurn() …
   fail() w trybie "none"  → state.penalty = null
 ```
 
-Przepływ beer pong (kolejka tur nie jest używana, bo kolejność wyznacza gra przy stole):
+Przepływ `card_draw`, czyli beer pong i nigdy przenigdy (bez graczy, kolejki i kar, ADR 0008):
 
 ```
-setup(players, cards) → hit("Kuba") → state.currentPlayer = "Kuba",
-                                      state.currentCard = resolve(drawFrom("challenge"))
-complete() | fail() → oczekiwanie na kolejne hit(...)
+setup(cards) → draw() → state.currentCard = drawFrom(talia)
+draw() → kolejna karta; po ostatniej karcie state.phase = "finished" (ekran końca kart)
+restart() → ta sama talia potasowana od nowa, state.phase = "drawing"
 ```
 
 ## 5. `apps/api`: NestJS w Clean Architecture
@@ -182,8 +181,7 @@ apps/web/src/
 │  ├─ catalog/        lista gier i edycji, ekran zakupu
 │  ├─ session-setup/  dodawanie graczy, wybór edycji, tryb kar (shoty / bez kar)
 │  ├─ truth-or-dare/  ekrany gry (renderują stan z game-engine)
-│  ├─ who-drinks/
-│  ├─ beer-pong/
+│  ├─ card-draw/      beer pong i nigdy przenigdy
 │  └─ account/        logowanie, zakupy
 ├─ shared/
 │  ├─ api/            klient HTTP (typy z contracts), TanStack Query hooks
@@ -259,7 +257,7 @@ Playwright, projekty: `iPhone 15` (WebKit), `Pixel 7` (Chromium). Scenariusze kr
 ## 11. Fazy
 
 1. **Fundament**: monorepo, CI, `game-engine` z prawdą czy wyzwanie (TDD), PWA z jedną darmową edycją, offline, E2E.
-2. **Katalog i treści**: api `catalog`, seed, kolejne gry (pije ten kto, beer pong), age gate, tryby kar.
+2. **Katalog i treści**: api `catalog`, seed, kolejne gry (beer pong, nigdy przenigdy), age gate, tryby kar.
 3. **Konta i płatności**: `identity`, `billing`, Stripe Checkout, pierwsza płatna edycja.
 4. **Google Play**: TWA, ADR o płatnościach na Androidzie, przegląd treści pod politykę Play.
 

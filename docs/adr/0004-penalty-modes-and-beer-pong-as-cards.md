@@ -2,7 +2,7 @@
 
 ## Status
 
-Zaakceptowany.
+Zaakceptowany, częściowo zastąpiony przez ADR 0008 (beer pong, nigdy przenigdy, wspólny przepływ). Tryby kar i zasady treści obowiązują.
 
 ## Kontekst
 
